@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { prisma } from '@/lib/db'
 
-// Validation schema for inquiry
+export const dynamic = 'force-dynamic'
+
 const inquirySchema = z.object({
   name: z.string().min(2, 'نام الزامی است'),
   company: z.string().optional(),
@@ -9,49 +11,37 @@ const inquirySchema = z.object({
   email: z.string().email('ایمیل معتبر نیست'),
   message: z.string().optional(),
   productId: z.string().optional(),
-  productTitle: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-
-    // Validate request body
     const data = inquirySchema.parse(body)
 
-    // In production, save to database and send notification email
-    console.log('New inquiry received:', data)
-
-    // Simulate database save
-    const inquiry = {
-      id: Math.random().toString(36).substring(2, 9),
-      ...data,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    }
-
-    // TODO: Send notification email to admin
-    // await sendEmail({
-    //   to: 'info@hatefertebat.ir',
-    //   subject: `درخواست قیمت جدید: ${data.productTitle}`,
-    //   body: `...`
-    // })
+    const inquiry = await prisma.inquiry.create({
+      data: {
+        name: data.name,
+        company: data.company,
+        phone: data.phone,
+        email: data.email,
+        message: data.message,
+        productId: data.productId || null,
+        status: 'NEW',
+      },
+    })
 
     return NextResponse.json({
       success: true,
       message: 'درخواست شما با موفقیت ثبت شد',
-      data: { id: inquiry.id },
+      id: inquiry.id,
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
           success: false,
-          error: 'اطلاعات وارد شده معتبر نیست',
-          details: error.issues.map((e) => ({
-            field: e.path.join('.'),
-            message: e.message,
-          })),
+          message: 'اطلاعات وارد شده معتبر نیست',
+          errors: error.issues.map((e) => e.message),
         },
         { status: 400 }
       )
@@ -59,7 +49,51 @@ export async function POST(request: NextRequest) {
 
     console.error('Error creating inquiry:', error)
     return NextResponse.json(
-      { success: false, error: 'خطای سرور' },
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const skip = (page - 1) * limit
+
+    const where = status ? { status: status as 'NEW' | 'REVIEWED' | 'ANSWERED' | 'CLOSED' } : {}
+
+    const [inquiries, total] = await Promise.all([
+      prisma.inquiry.findMany({
+        where,
+        include: {
+          product: {
+            select: { titleFa: true, slug: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.inquiry.count({ where }),
+    ])
+
+    return NextResponse.json({
+      success: true,
+      data: inquiries,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    console.error('Error fetching inquiries:', error)
+    return NextResponse.json(
+      { success: false, message: 'خطای سرور' },
       { status: 500 }
     )
   }

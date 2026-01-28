@@ -36,17 +36,28 @@ export default function ServiceRequestForm({ serviceTitle }: ServiceRequestFormP
     },
   })
 
-  const onSubmit = async (_data: ServiceRequestFormData) => {
+  const onSubmit = async (data: ServiceRequestFormData) => {
     setIsSubmitting(true)
 
     try {
-      // In production, send _data to API
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: `${data.phone}@service.local`,
+          subject: `درخواست خدمت: ${data.serviceType}`,
+          message: `تلفن: ${data.phone}\n${data.message || ''}`,
+        }),
+      })
 
-      setIsSuccess(true)
-      reset()
+      const result = await response.json()
 
-      setTimeout(() => setIsSuccess(false), 5000)
+      if (result.success) {
+        setIsSuccess(true)
+        reset()
+        setTimeout(() => setIsSuccess(false), 5000)
+      }
     } catch (error) {
       console.error('Error submitting request:', error)
     } finally {

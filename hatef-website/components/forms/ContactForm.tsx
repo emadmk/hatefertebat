@@ -30,16 +30,26 @@ export default function ContactForm() {
     resolver: zodResolver(contactSchema),
   })
 
-  const onSubmit = async (_data: ContactFormData) => {
+  const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true)
 
     try {
-      // In production, send _data to API
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      trackContactFormSubmit()
-      setIsSuccess(true)
-      reset()
-      setTimeout(() => setIsSuccess(false), 5000)
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        trackContactFormSubmit()
+        setIsSuccess(true)
+        reset()
+        setTimeout(() => setIsSuccess(false), 5000)
+      } else {
+        console.error('Error:', result.message)
+      }
     } catch (error) {
       console.error('Error:', error)
     } finally {

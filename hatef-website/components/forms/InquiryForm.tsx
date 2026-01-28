@@ -36,18 +36,29 @@ export default function InquiryForm({ productId, productTitle }: InquiryFormProp
     resolver: zodResolver(inquirySchema),
   })
 
-  const onSubmit = async (_data: InquiryFormData) => {
+  const onSubmit = async (data: InquiryFormData) => {
     setIsSubmitting(true)
 
     try {
-      // In production, send _data to API
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          productId,
+        }),
+      })
 
-      trackInquirySubmit(productTitle)
-      setIsSuccess(true)
-      reset()
+      const result = await response.json()
 
-      setTimeout(() => setIsSuccess(false), 5000)
+      if (result.success) {
+        trackInquirySubmit(productTitle)
+        setIsSuccess(true)
+        reset()
+        setTimeout(() => setIsSuccess(false), 5000)
+      } else {
+        console.error('Error:', result.message)
+      }
     } catch (error) {
       console.error('Error submitting inquiry:', error)
     } finally {
