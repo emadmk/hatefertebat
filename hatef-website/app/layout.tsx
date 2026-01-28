@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { generateOrganizationSchema, generateLocalBusinessSchema, siteConfig } from '@/lib/seo'
+import { GoogleAnalytics } from '@/components/common'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -107,6 +108,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-[Vazirmatn] antialiased bg-gray-50 text-dark">
+        <GoogleAnalytics />
         {children}
       </body>
     </html>

@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate:wp": "ts-node scripts/migrate-wordpress.ts"
+    "migrate:wp": "ts-node scripts/migrate-wordpress.ts",
+    "backup": "ts-node scripts/backup.ts",
+    "backup:list": "ts-node scripts/backup.ts list",
+    "backup:restore": "ts-node scripts/backup.ts restore",
+    "optimize:images": "ts-node scripts/optimize-images.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
