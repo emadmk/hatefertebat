@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -11,7 +12,7 @@ interface PaginationProps {
   baseUrl: string
 }
 
-export default function Pagination({
+function PaginationContent({
   currentPage,
   totalPages,
   baseUrl,
@@ -27,7 +28,7 @@ export default function Pagination({
   const getVisiblePages = () => {
     const delta = 2
     const range = []
-    const rangeWithDots = []
+    const rangeWithDots: (number | string)[] = []
 
     for (
       let i = Math.max(2, currentPage - delta);
@@ -109,5 +110,13 @@ export default function Pagination({
         </span>
       )}
     </nav>
+  )
+}
+
+export default function Pagination(props: PaginationProps) {
+  return (
+    <Suspense fallback={<div className="h-12" />}>
+      <PaginationContent {...props} />
+    </Suspense>
   )
 }

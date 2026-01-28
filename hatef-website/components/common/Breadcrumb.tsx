@@ -3,8 +3,10 @@ import { ChevronLeft, Home } from 'lucide-react'
 import { generateBreadcrumbSchema } from '@/lib/seo'
 
 interface BreadcrumbItem {
-  label: string
-  href: string
+  name?: string
+  label?: string
+  url?: string
+  href?: string
 }
 
 interface BreadcrumbProps {
@@ -12,7 +14,11 @@ interface BreadcrumbProps {
 }
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
-  const allItems = [{ label: 'خانه', href: '/' }, ...items]
+  const normalizedItems = items.map((item) => ({
+    label: item.label || item.name || '',
+    href: item.href || item.url || '',
+  }))
+  const allItems = [{ label: 'خانه', href: '/' }, ...normalizedItems]
 
   const schema = generateBreadcrumbSchema(
     allItems.map((item) => ({
