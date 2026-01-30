@@ -2,19 +2,10 @@
  * WordPress to Next.js Migration Script
  * کرمان هاتف ارتباط
  *
- * This script migrates data from WordPress database to Prisma/PostgreSQL
- *
  * Usage:
- * 1. Set up environment variables in .env file
- * 2. Run: npx ts-node scripts/migrate-wordpress.ts
- *
- * Required environment variables:
- * - WP_DB_HOST: WordPress database host
- * - WP_DB_USER: WordPress database username
- * - WP_DB_PASSWORD: WordPress database password
- * - WP_DB_NAME: WordPress database name
- * - WP_TABLE_PREFIX: WordPress table prefix (default: wp_)
- * - DATABASE_URL: Prisma PostgreSQL connection string
+ * 1. Import WordPress SQL to MySQL: mysql wordpress_temp < database.sql
+ * 2. Set environment variables
+ * 3. Run: npx ts-node scripts/migrate-wordpress.ts
  */
 
 import mysql from 'mysql2/promise'
@@ -26,50 +17,23 @@ import * as path from 'path'
 const config = {
   wordpress: {
     host: process.env.WP_DB_HOST || 'localhost',
-    user: process.env.WP_DB_USER || 'root',
-    password: process.env.WP_DB_PASSWORD || '',
-    database: process.env.WP_DB_NAME || 'wordpress',
+    user: process.env.WP_DB_USER || 'hatef',
+    password: process.env.WP_DB_PASSWORD || 'hatef123',
+    database: process.env.WP_DB_NAME || 'wordpress_temp',
     tablePrefix: process.env.WP_TABLE_PREFIX || 'wp_',
   },
-  mediaPath: process.env.WP_MEDIA_PATH || '/var/www/html/wp-content/uploads',
-  outputPath: './public/images',
+  uploadsSource: '/var/www/hatef/wordpress/uploads',
+  uploadsTarget: '/var/www/hatef/uploads',
 }
 
 const prisma = new PrismaClient()
 
-// Helper to convert Persian/Arabic digits to English
-function toEnglishDigits(str: string): string {
-  const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
-  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']
-
-  let result = str
-  for (let i = 0; i < 10; i++) {
-    result = result.replace(new RegExp(persianNumbers[i], 'g'), i.toString())
-    result = result.replace(new RegExp(arabicNumbers[i], 'g'), i.toString())
-  }
-  return result
-}
-
-// Generate slug from title
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0600-\u06FF\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
-
 // Clean HTML content
 function cleanHtml(html: string): string {
   if (!html) return ''
-
-  // Remove WordPress shortcodes
-  let cleaned = html.replace(/\[.*?\]/g, '')
-
-  // Clean up extra whitespace
+  let cleaned = html.replace(/\[.*?\]/g, '') // Remove shortcodes
+  cleaned = cleaned.replace(/<[^>]*>/g, ' ') // Remove HTML tags
   cleaned = cleaned.replace(/\s+/g, ' ').trim()
-
   return cleaned
 }
 
@@ -88,12 +52,13 @@ async function getFeaturedImage(
   )
 
   if (rows.length > 0 && rows[0].guid) {
-    // Convert WordPress URL to local path
     const url = rows[0].guid as string
-    const filename = path.basename(url)
-    return `/images/products/${filename}`
+    // Extract path from WordPress URL
+    const match = url.match(/uploads\/(.+)$/)
+    if (match) {
+      return `/uploads/${match[1]}`
+    }
   }
-
   return null
 }
 
@@ -113,27 +78,66 @@ async function migrateCategories(wpConnection: mysql.Connection) {
   for (const row of rows) {
     try {
       await prisma.category.upsert({
-        where: { slug: row.slug },
+        where: { slug: row.slug || `cat-${row.term_id}` },
         update: {
           nameFa: row.name,
-          nameEn: row.slug,
           description: row.description || null,
         },
         create: {
           nameFa: row.name,
           nameEn: row.slug,
-          slug: row.slug,
+          slug: row.slug || `cat-${row.term_id}`,
           description: row.description || null,
           order: count,
         },
       })
       count++
+      console.log(`  ✓ ${row.name}`)
     } catch (error) {
-      console.error(`  ❌ Error migrating category: ${row.name}`, error)
+      console.error(`  ❌ Error: ${row.name}`, error)
     }
   }
 
-  console.log(`  ✅ Migrated ${count} categories`)
+  console.log(`  ✅ Migrated ${count} categories\n`)
+  return count
+}
+
+// Migrate Brands
+async function migrateBrands(wpConnection: mysql.Connection) {
+  console.log('🏷️ Migrating brands...')
+  const prefix = config.wordpress.tablePrefix
+
+  const [rows] = await wpConnection.execute<mysql.RowDataPacket[]>(
+    `SELECT t.term_id, t.name, t.slug, tt.description
+     FROM ${prefix}terms t
+     INNER JOIN ${prefix}term_taxonomy tt ON t.term_id = tt.term_id
+     WHERE tt.taxonomy = 'pa_brand' OR tt.taxonomy = 'product_brand'`
+  )
+
+  let count = 0
+  for (const row of rows) {
+    try {
+      await prisma.brand.upsert({
+        where: { slug: row.slug || `brand-${row.term_id}` },
+        update: {
+          name: row.name,
+          description: row.description || null,
+        },
+        create: {
+          name: row.name,
+          slug: row.slug || `brand-${row.term_id}`,
+          description: row.description || null,
+          order: count,
+        },
+      })
+      count++
+      console.log(`  ✓ ${row.name}`)
+    } catch (error) {
+      console.error(`  ❌ Error: ${row.name}`, error)
+    }
+  }
+
+  console.log(`  ✅ Migrated ${count} brands\n`)
   return count
 }
 
@@ -142,9 +146,8 @@ async function migrateProducts(wpConnection: mysql.Connection) {
   console.log('📦 Migrating products...')
   const prefix = config.wordpress.tablePrefix
 
-  // Get WooCommerce products
   const [rows] = await wpConnection.execute<mysql.RowDataPacket[]>(
-    `SELECT p.ID, p.post_title, p.post_name, p.post_content, p.post_excerpt, p.post_date
+    `SELECT p.ID, p.post_title, p.post_name, p.post_content, p.post_excerpt, p.post_date, p.guid
      FROM ${prefix}posts p
      WHERE p.post_type = 'product' AND p.post_status = 'publish'`
   )
@@ -152,7 +155,6 @@ async function migrateProducts(wpConnection: mysql.Connection) {
   let count = 0
   for (const row of rows) {
     try {
-      // Get product image
       const image = await getFeaturedImage(wpConnection, row.ID)
 
       // Get product category
@@ -173,40 +175,50 @@ async function migrateProducts(wpConnection: mysql.Connection) {
         categoryId = category?.id
       }
 
-      // Get product attributes (meta)
+      // Get product attributes
       const [metaRows] = await wpConnection.execute<mysql.RowDataPacket[]>(
         `SELECT meta_key, meta_value FROM ${prefix}postmeta
-         WHERE post_id = ? AND meta_key NOT LIKE '\\_%'`,
+         WHERE post_id = ? AND meta_key NOT LIKE '\\_%' AND meta_value IS NOT NULL AND meta_value != ''`,
         [row.ID]
       )
 
+      interface MetaRow {
+        meta_key: string
+        meta_value: string
+      }
+
       const attributes = metaRows
-        .filter((m) => m.meta_value && m.meta_value.length < 500)
-        .map((m) => ({
-          key: m.meta_key,
+        .filter((m: MetaRow) => m.meta_value && m.meta_value.length < 500 && m.meta_value.length > 0)
+        .map((m: MetaRow) => ({
+          key: m.meta_key.replace(/_/g, ' '),
           value: m.meta_value,
         }))
 
+      const slug = row.post_name || `product-${row.ID}`
+
       await prisma.product.upsert({
-        where: { slug: row.post_name },
+        where: { slug },
         update: {
           titleFa: row.post_title,
-          description: cleanHtml(row.post_content),
-          shortDescription: cleanHtml(row.post_excerpt),
-          image: image || '/images/products/placeholder.jpg',
+          fullDesc: cleanHtml(row.post_content),
+          shortDesc: cleanHtml(row.post_excerpt),
+          image: image || null,
           categoryId,
+          status: 'PUBLISHED',
+          oldUrl: row.guid,
         },
         create: {
           titleFa: row.post_title,
           titleEn: row.post_name,
-          slug: row.post_name,
-          description: cleanHtml(row.post_content),
-          shortDescription: cleanHtml(row.post_excerpt),
-          image: image || '/images/products/placeholder.jpg',
+          slug,
+          fullDesc: cleanHtml(row.post_content),
+          shortDesc: cleanHtml(row.post_excerpt),
+          image: image || null,
           categoryId,
-          isActive: true,
+          status: 'PUBLISHED',
+          oldUrl: row.guid,
           attributes: {
-            create: attributes.map((attr) => ({
+            create: attributes.map((attr: { key: string; value: string }) => ({
               key: attr.key,
               value: attr.value,
             })),
@@ -214,12 +226,13 @@ async function migrateProducts(wpConnection: mysql.Connection) {
         },
       })
       count++
+      console.log(`  ✓ ${row.post_title}`)
     } catch (error) {
-      console.error(`  ❌ Error migrating product: ${row.post_title}`, error)
+      console.error(`  ❌ Error: ${row.post_title}`, error)
     }
   }
 
-  console.log(`  ✅ Migrated ${count} products`)
+  console.log(`  ✅ Migrated ${count} products\n`)
   return count
 }
 
@@ -240,139 +253,64 @@ async function migratePosts(wpConnection: mysql.Connection) {
     try {
       const image = await getFeaturedImage(wpConnection, row.ID)
 
-      // Get author name
       const [authorRows] = await wpConnection.execute<mysql.RowDataPacket[]>(
         `SELECT display_name FROM ${prefix}users WHERE ID = ?`,
         [row.post_author]
       )
-      const authorName = authorRows[0]?.display_name || 'تیم فنی'
+      const authorName = authorRows[0]?.display_name || 'تیم فنی هاتف ارتباط'
+
+      const slug = row.post_name || `post-${row.ID}`
 
       await prisma.post.upsert({
-        where: { slug: row.post_name },
+        where: { slug },
         update: {
           titleFa: row.post_title,
-          content: cleanHtml(row.post_content),
+          content: row.post_content,
           excerpt: cleanHtml(row.post_excerpt),
-          image: image || '/images/blog/placeholder.jpg',
+          image: image || null,
+          status: 'PUBLISHED',
         },
         create: {
           titleFa: row.post_title,
           titleEn: row.post_name,
-          slug: row.post_name,
-          content: cleanHtml(row.post_content),
+          slug,
+          content: row.post_content,
           excerpt: cleanHtml(row.post_excerpt),
-          image: image || '/images/blog/placeholder.jpg',
+          image: image || null,
           author: authorName,
-          isPublished: true,
+          status: 'PUBLISHED',
           publishedAt: new Date(row.post_date),
         },
       })
       count++
+      console.log(`  ✓ ${row.post_title}`)
     } catch (error) {
-      console.error(`  ❌ Error migrating post: ${row.post_title}`, error)
+      console.error(`  ❌ Error: ${row.post_title}`, error)
     }
   }
 
-  console.log(`  ✅ Migrated ${count} posts`)
+  console.log(`  ✅ Migrated ${count} posts\n`)
   return count
-}
-
-// Migrate Pages (for About, Contact, etc.)
-async function migratePages(wpConnection: mysql.Connection) {
-  console.log('📄 Migrating pages...')
-  const prefix = config.wordpress.tablePrefix
-
-  const [rows] = await wpConnection.execute<mysql.RowDataPacket[]>(
-    `SELECT p.ID, p.post_title, p.post_name, p.post_content
-     FROM ${prefix}posts p
-     WHERE p.post_type = 'page' AND p.post_status = 'publish'`
-  )
-
-  // Store page content for later use
-  const pages: Record<string, { title: string; content: string }> = {}
-
-  for (const row of rows) {
-    pages[row.post_name] = {
-      title: row.post_title,
-      content: cleanHtml(row.post_content),
-    }
-  }
-
-  // Save to a JSON file for reference
-  fs.writeFileSync(
-    './scripts/migrated-pages.json',
-    JSON.stringify(pages, null, 2)
-  )
-
-  console.log(`  ✅ Migrated ${rows.length} pages to migrated-pages.json`)
-  return rows.length
-}
-
-// Migrate Settings (from WordPress options)
-async function migrateSettings(wpConnection: mysql.Connection) {
-  console.log('⚙️ Migrating settings...')
-  const prefix = config.wordpress.tablePrefix
-
-  const settingsToMigrate = [
-    'blogname',
-    'blogdescription',
-    'admin_email',
-    'siteurl',
-  ]
-
-  const [rows] = await wpConnection.execute<mysql.RowDataPacket[]>(
-    `SELECT option_name, option_value FROM ${prefix}options
-     WHERE option_name IN (${settingsToMigrate.map(() => '?').join(',')})`,
-    settingsToMigrate
-  )
-
-  for (const row of rows) {
-    try {
-      let key = row.option_name
-      if (key === 'blogname') key = 'site_name'
-      if (key === 'blogdescription') key = 'site_description'
-      if (key === 'admin_email') key = 'email'
-      if (key === 'siteurl') key = 'site_url'
-
-      await prisma.setting.upsert({
-        where: { key },
-        update: { value: row.option_value },
-        create: { key, value: row.option_value },
-      })
-    } catch (error) {
-      console.error(`  ❌ Error migrating setting: ${row.option_name}`, error)
-    }
-  }
-
-  console.log(`  ✅ Migrated ${rows.length} settings`)
-  return rows.length
 }
 
 // Copy media files
 async function copyMediaFiles() {
   console.log('🖼️ Copying media files...')
 
-  const sourcePath = config.mediaPath
-  const destPath = config.outputPath
+  const sourcePath = config.uploadsSource
+  const destPath = config.uploadsTarget
 
   if (!fs.existsSync(sourcePath)) {
-    console.log('  ⚠️ WordPress media path not found, skipping media copy')
+    console.log(`  ⚠️ Source path not found: ${sourcePath}`)
     return 0
   }
 
-  // Create destination directories
-  const dirs = ['products', 'blog', 'brands', 'projects', 'certificates']
-  for (const dir of dirs) {
-    const dirPath = path.join(destPath, dir)
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true })
-    }
+  if (!fs.existsSync(destPath)) {
+    fs.mkdirSync(destPath, { recursive: true })
   }
 
-  // Count copied files
   let count = 0
 
-  // Recursively copy files
   function copyDir(src: string, dest: string) {
     if (!fs.existsSync(src)) return
 
@@ -383,13 +321,13 @@ async function copyMediaFiles() {
       const destPathFull = path.join(dest, entry.name)
 
       if (entry.isDirectory()) {
+        if (!fs.existsSync(destPathFull)) {
+          fs.mkdirSync(destPathFull, { recursive: true })
+        }
         copyDir(srcPath, destPathFull)
-      } else if (/\.(jpg|jpeg|png|gif|webp)$/i.test(entry.name)) {
-        // Only copy images, skip thumbnails
+      } else if (/\.(jpg|jpeg|png|gif|webp|pdf)$/i.test(entry.name)) {
+        // Skip WordPress thumbnail variants
         if (!/-\d+x\d+\./.test(entry.name)) {
-          if (!fs.existsSync(path.dirname(destPathFull))) {
-            fs.mkdirSync(path.dirname(destPathFull), { recursive: true })
-          }
           fs.copyFileSync(srcPath, destPathFull)
           count++
         }
@@ -397,59 +335,90 @@ async function copyMediaFiles() {
     }
   }
 
-  copyDir(sourcePath, path.join(destPath, 'products'))
+  copyDir(sourcePath, destPath)
 
-  console.log(`  ✅ Copied ${count} media files`)
+  console.log(`  ✅ Copied ${count} media files\n`)
   return count
+}
+
+// Generate redirects file
+async function generateRedirects() {
+  console.log('🔄 Generating redirects...')
+
+  const products = await prisma.product.findMany({
+    where: { oldUrl: { not: null } },
+    select: { slug: true, oldUrl: true },
+  })
+
+  const redirects = products
+    .filter((p) => p.oldUrl)
+    .map((p) => {
+      const oldPath = new URL(p.oldUrl!).pathname
+      return {
+        source: oldPath,
+        destination: `/products/${p.slug}`,
+        permanent: true,
+      }
+    })
+
+  const content = `// Auto-generated redirects from WordPress migration
+export const redirects = ${JSON.stringify(redirects, null, 2)}
+`
+
+  fs.writeFileSync('./config/redirects.ts', content)
+  console.log(`  ✅ Generated ${redirects.length} redirects\n`)
+
+  return redirects.length
 }
 
 // Main migration function
 async function main() {
-  console.log('🚀 Starting WordPress Migration')
-  console.log('================================\n')
+  console.log('🚀 WordPress Migration - کرمان هاتف ارتباط')
+  console.log('==========================================\n')
 
   let wpConnection: mysql.Connection | null = null
 
   try {
-    // Connect to WordPress database
-    console.log('🔌 Connecting to WordPress database...')
+    console.log('🔌 Connecting to WordPress MySQL...')
     wpConnection = await mysql.createConnection({
       host: config.wordpress.host,
       user: config.wordpress.user,
       password: config.wordpress.password,
       database: config.wordpress.database,
     })
-    console.log('  ✅ Connected to WordPress database\n')
+    console.log('  ✅ Connected!\n')
 
     // Run migrations
     const results = {
+      media: await copyMediaFiles(),
       categories: await migrateCategories(wpConnection),
+      brands: await migrateBrands(wpConnection),
       products: await migrateProducts(wpConnection),
       posts: await migratePosts(wpConnection),
-      pages: await migratePages(wpConnection),
-      settings: await migrateSettings(wpConnection),
-      media: await copyMediaFiles(),
+      redirects: await generateRedirects(),
     }
 
-    console.log('\n================================')
+    console.log('==========================================')
     console.log('✅ Migration Complete!')
-    console.log('================================')
-    console.log(`Categories: ${results.categories}`)
-    console.log(`Products: ${results.products}`)
-    console.log(`Posts: ${results.posts}`)
-    console.log(`Pages: ${results.pages}`)
-    console.log(`Settings: ${results.settings}`)
-    console.log(`Media Files: ${results.media}`)
+    console.log('==========================================')
+    console.log(`📁 Categories: ${results.categories}`)
+    console.log(`🏷️ Brands: ${results.brands}`)
+    console.log(`📦 Products: ${results.products}`)
+    console.log(`📝 Posts: ${results.posts}`)
+    console.log(`🖼️ Media: ${results.media}`)
+    console.log(`🔄 Redirects: ${results.redirects}`)
+    console.log('')
+    console.log('Next steps:')
+    console.log('1. npm run build')
+    console.log('2. pm2 restart hatef-website')
+
   } catch (error) {
     console.error('❌ Migration failed:', error)
     process.exit(1)
   } finally {
-    if (wpConnection) {
-      await wpConnection.end()
-    }
+    if (wpConnection) await wpConnection.end()
     await prisma.$disconnect()
   }
 }
 
-// Run the migration
 main()
