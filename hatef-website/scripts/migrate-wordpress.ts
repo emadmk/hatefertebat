@@ -71,7 +71,7 @@ async function migrateCategories(wpConnection: mysql.Connection) {
     `SELECT t.term_id, t.name, t.slug, tt.description, tt.parent
      FROM ${prefix}terms t
      INNER JOIN ${prefix}term_taxonomy tt ON t.term_id = tt.term_id
-     WHERE tt.taxonomy = 'product_cat'`
+     WHERE tt.taxonomy = 'product-category'`
   )
 
   let count = 0
@@ -111,7 +111,7 @@ async function migrateBrands(wpConnection: mysql.Connection) {
     `SELECT t.term_id, t.name, t.slug, tt.description
      FROM ${prefix}terms t
      INNER JOIN ${prefix}term_taxonomy tt ON t.term_id = tt.term_id
-     WHERE tt.taxonomy = 'pa_brand' OR tt.taxonomy = 'product_brand'`
+     WHERE tt.taxonomy = 'brands'`
   )
 
   let count = 0
@@ -149,7 +149,7 @@ async function migrateProducts(wpConnection: mysql.Connection) {
   const [rows] = await wpConnection.execute<mysql.RowDataPacket[]>(
     `SELECT p.ID, p.post_title, p.post_name, p.post_content, p.post_excerpt, p.post_date, p.guid
      FROM ${prefix}posts p
-     WHERE p.post_type = 'product' AND p.post_status = 'publish'`
+     WHERE p.post_type = 'products' AND p.post_status = 'publish'`
   )
 
   let count = 0
@@ -162,7 +162,7 @@ async function migrateProducts(wpConnection: mysql.Connection) {
         `SELECT t.slug FROM ${prefix}terms t
          INNER JOIN ${prefix}term_taxonomy tt ON t.term_id = tt.term_id
          INNER JOIN ${prefix}term_relationships tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
-         WHERE tr.object_id = ? AND tt.taxonomy = 'product_cat'
+         WHERE tr.object_id = ? AND tt.taxonomy = 'product-category'
          LIMIT 1`,
         [row.ID]
       )
@@ -288,6 +288,54 @@ async function migratePosts(wpConnection: mysql.Connection) {
   return count
 }
 
+// Migrate Services
+async function migrateServices(wpConnection: mysql.Connection) {
+  console.log('🔧 Migrating services...')
+  const prefix = config.wordpress.tablePrefix
+
+  const [rows] = await wpConnection.execute<mysql.RowDataPacket[]>(
+    `SELECT p.ID, p.post_title, p.post_name, p.post_content, p.post_excerpt, p.post_date, p.guid
+     FROM ${prefix}posts p
+     WHERE p.post_type = 'services' AND p.post_status = 'publish'`
+  )
+
+  let count = 0
+  for (const row of rows) {
+    try {
+      const image = await getFeaturedImage(wpConnection, row.ID)
+      const slug = row.post_name || `service-${row.ID}`
+
+      await prisma.service.upsert({
+        where: { slug },
+        update: {
+          titleFa: row.post_title,
+          fullDesc: row.post_content,
+          shortDesc: cleanHtml(row.post_excerpt),
+          image: image || null,
+          status: 'PUBLISHED',
+        },
+        create: {
+          titleFa: row.post_title,
+          titleEn: row.post_name,
+          slug,
+          fullDesc: row.post_content,
+          shortDesc: cleanHtml(row.post_excerpt),
+          image: image || null,
+          status: 'PUBLISHED',
+          order: count,
+        },
+      })
+      count++
+      console.log(`  ✓ ${row.post_title}`)
+    } catch (error) {
+      console.error(`  ❌ Error: ${row.post_title}`, error)
+    }
+  }
+
+  console.log(`  ✅ Migrated ${count} services\n`)
+  return count
+}
+
 // Copy media files
 async function copyMediaFiles() {
   console.log('🖼️ Copying media files...')
@@ -389,6 +437,7 @@ async function main() {
       categories: await migrateCategories(wpConnection),
       brands: await migrateBrands(wpConnection),
       products: await migrateProducts(wpConnection),
+      services: await migrateServices(wpConnection),
       posts: await migratePosts(wpConnection),
       redirects: await generateRedirects(),
     }
@@ -399,6 +448,7 @@ async function main() {
     console.log(`📁 Categories: ${results.categories}`)
     console.log(`🏷️ Brands: ${results.brands}`)
     console.log(`📦 Products: ${results.products}`)
+    console.log(`🔧 Services: ${results.services}`)
     console.log(`📝 Posts: ${results.posts}`)
     console.log(`🖼️ Media: ${results.media}`)
     console.log(`🔄 Redirects: ${results.redirects}`)
