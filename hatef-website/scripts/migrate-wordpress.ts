@@ -182,17 +182,15 @@ async function migrateProducts(wpConnection: mysql.Connection) {
         [row.ID]
       )
 
-      interface MetaRow {
-        meta_key: string
-        meta_value: string
+      const attributes: Array<{key: string, value: string}> = []
+      for (const m of metaRows) {
+        if (m.meta_value && String(m.meta_value).length < 500 && String(m.meta_value).length > 0) {
+          attributes.push({
+            key: String(m.meta_key).replace(/_/g, ' '),
+            value: String(m.meta_value),
+          })
+        }
       }
-
-      const attributes = metaRows
-        .filter((m: MetaRow) => m.meta_value && m.meta_value.length < 500 && m.meta_value.length > 0)
-        .map((m: MetaRow) => ({
-          key: m.meta_key.replace(/_/g, ' '),
-          value: m.meta_value,
-        }))
 
       const slug = row.post_name || `product-${row.ID}`
 
@@ -218,10 +216,7 @@ async function migrateProducts(wpConnection: mysql.Connection) {
           status: 'PUBLISHED',
           oldUrl: row.guid,
           attributes: {
-            create: attributes.map((attr: { key: string; value: string }) => ({
-              key: attr.key,
-              value: attr.value,
-            })),
+            create: attributes,
           },
         },
       })
