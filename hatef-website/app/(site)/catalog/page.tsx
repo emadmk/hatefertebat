@@ -36,7 +36,7 @@ export default async function CatalogPage() {
   ]
 
   // Get unique categories for filter buttons
-  const categories = ['همه', ...new Set(catalogs.map(c => c.category).filter(Boolean))]
+  const categories = ['همه', ...Array.from(new Set(catalogs.map(c => c.category).filter((c): c is string => c !== null)))]
 
   return (
     <div className="min-h-screen bg-gray-50">
