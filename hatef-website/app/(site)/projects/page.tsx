@@ -7,6 +7,18 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Project {
+  id: string
+  slug: string
+  title: string
+  description: string | null
+  image: string | null
+  category: string | null
+  client: string | null
+  location: string | null
+  completedAt: Date | null
+}
+
 export const metadata: Metadata = {
   title: 'پروژه‌های انجام شده',
   description: 'نمونه پروژه‌های اجرا شده توسط کرمان هاتف ارتباط در زمینه سیستم‌های امنیتی و مخابراتی',
@@ -27,7 +39,7 @@ async function getProjects(page: number = 1, limit: number = 9) {
     })
   ])
 
-  return { projects, total, totalPages: Math.ceil(total / limit) }
+  return { projects: projects as Project[], total, totalPages: Math.ceil(total / limit) }
 }
 
 async function getStats() {

@@ -6,15 +6,25 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Catalog {
+  id: string
+  title: string
+  description: string | null
+  category: string | null
+  fileUrl: string | null
+  fileSize: string | null
+}
+
 export const metadata: Metadata = {
   title: 'کاتالوگ محصولات',
   description: 'دانلود کاتالوگ محصولات کرمان هاتف ارتباط - تجهیزات مخابراتی، دوربین مداربسته، کنترل دسترسی',
 }
 
-async function getCatalogs() {
-  return prisma.catalog.findMany({
+async function getCatalogs(): Promise<Catalog[]> {
+  const catalogs = await prisma.catalog.findMany({
     orderBy: { order: 'asc' },
   })
+  return catalogs as Catalog[]
 }
 
 export default async function CatalogPage() {

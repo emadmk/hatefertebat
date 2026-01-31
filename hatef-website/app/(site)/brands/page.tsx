@@ -7,6 +7,15 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Brand {
+  id: string
+  name: string
+  slug: string
+  logo: string | null
+  description: string | null
+  _count: { products: number }
+}
+
 export const metadata: Metadata = {
   title: 'برندها',
   description: 'نمایندگی رسمی برندهای Motorola، Avigilon، Cambium Networks و Industronic در ایران',
@@ -21,7 +30,7 @@ async function getBrands() {
       }
     }
   })
-  return brands
+  return brands as Brand[]
 }
 
 export default async function BrandsPage() {

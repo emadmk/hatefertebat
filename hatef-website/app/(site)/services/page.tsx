@@ -7,6 +7,16 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Service {
+  id: string
+  slug: string
+  titleFa: string
+  descriptionFa: string | null
+  shortDesc: string | null
+  icon: string | null
+  image: string | null
+}
+
 export const metadata: Metadata = {
   title: 'خدمات',
   description: 'خدمات کرمان هاتف ارتباط شامل راه‌اندازی، تامین تجهیزات، نصب و مهندسی سیستم‌های مخابراتی و امنیتی',
@@ -16,11 +26,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Camera, Radio, Shield, Headphones, Network, Volume2, Settings, Truck, Wrench, Cpu,
 }
 
-async function getServices() {
-  return prisma.service.findMany({
+async function getServices(): Promise<Service[]> {
+  const services = await prisma.service.findMany({
     where: { status: 'PUBLISHED' },
     orderBy: { order: 'asc' },
   })
+  return services as Service[]
 }
 
 export default async function ServicesPage() {

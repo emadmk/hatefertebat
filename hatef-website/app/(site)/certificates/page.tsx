@@ -6,15 +6,25 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Certificate {
+  id: string
+  title: string
+  description: string | null
+  image: string | null
+  issuer: string | null
+  year: string | null
+}
+
 export const metadata: Metadata = {
   title: 'گواهینامه‌ها و مجوزها',
   description: 'گواهینامه‌ها و مجوزهای رسمی کرمان هاتف ارتباط - نمایندگی رسمی برندهای معتبر',
 }
 
-async function getCertificates() {
-  return prisma.certificate.findMany({
+async function getCertificates(): Promise<Certificate[]> {
+  const certificates = await prisma.certificate.findMany({
     orderBy: { order: 'asc' },
   })
+  return certificates as Certificate[]
 }
 
 export default async function CertificatesPage() {

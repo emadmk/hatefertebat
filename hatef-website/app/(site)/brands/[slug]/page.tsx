@@ -7,6 +7,17 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Product {
+  id: string
+  nameFa: string
+  slug: string
+  image: string | null
+  price: number | null
+  status: string
+  category: { id: string; nameFa: string; slug: string } | null
+  brand: { id: string; name: string; slug: string } | null
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ page?: string }>
@@ -41,7 +52,7 @@ async function getProductsByBrand(brandId: string, page: number = 1, limit: numb
     }),
   ])
 
-  return { products, total, totalPages: Math.ceil(total / limit) }
+  return { products: products as Product[], total, totalPages: Math.ceil(total / limit) }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
