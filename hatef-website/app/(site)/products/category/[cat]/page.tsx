@@ -33,8 +33,8 @@ interface Product {
 
 interface RawProduct {
   id: string
-  nameFa: string
-  nameEn: string | null
+  titleFa: string
+  titleEn: string | null
   slug: string
   shortDesc: string | null
   image: string | null
@@ -90,8 +90,8 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
 
   const mappedProducts: Product[] = (products as RawProduct[]).map((p) => ({
     id: p.id,
-    titleFa: p.nameFa,
-    titleEn: p.nameEn,
+    titleFa: p.titleFa,
+    titleEn: p.titleEn,
     slug: p.slug,
     shortDesc: p.shortDesc,
     image: p.image,

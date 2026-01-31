@@ -20,8 +20,8 @@ interface Product {
 
 interface RawProduct {
   id: string
-  nameFa: string
-  nameEn: string | null
+  titleFa: string
+  titleEn: string | null
   slug: string
   shortDesc: string | null
   image: string | null
@@ -65,8 +65,8 @@ async function getProductsByBrand(brandId: string, page: number = 1, limit: numb
 
   const products: Product[] = (rawProducts as RawProduct[]).map((p) => ({
     id: p.id,
-    titleFa: p.nameFa,
-    titleEn: p.nameEn,
+    titleFa: p.titleFa,
+    titleEn: p.titleEn,
     slug: p.slug,
     shortDesc: p.shortDesc,
     image: p.image,

@@ -14,7 +14,7 @@ interface Inquiry {
   name: string
   status: string
   createdAt: Date
-  product: { nameFa: string } | null
+  product: { titleFa: string } | null
 }
 
 async function getStats() {
@@ -30,13 +30,13 @@ async function getStats() {
     prisma.inquiry.count(),
     prisma.post.count({ where: { status: 'PUBLISHED' } }),
     prisma.project.count({ where: { status: 'PUBLISHED' } }),
-    prisma.inquiry.count({ where: { status: 'PENDING' } }),
+    prisma.inquiry.count({ where: { status: 'NEW' } }),
     prisma.inquiry.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
       include: {
         product: {
-          select: { nameFa: true }
+          select: { titleFa: true }
         }
       }
     }),
@@ -149,19 +149,19 @@ export default async function AdminDashboard() {
                 <div key={inquiry.id} className="flex items-center justify-between p-4">
                   <div>
                     <h4 className="font-medium text-dark">{inquiry.name}</h4>
-                    <p className="text-sm text-gray-500">{inquiry.product?.nameFa || 'بدون محصول'}</p>
+                    <p className="text-sm text-gray-500">{inquiry.product?.titleFa || 'بدون محصول'}</p>
                   </div>
                   <div className="text-left">
                     <span
                       className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        inquiry.status === 'PENDING'
+                        inquiry.status === 'NEW'
                           ? 'bg-yellow-100 text-yellow-700'
-                          : inquiry.status === 'REPLIED'
+                          : inquiry.status === 'ANSWERED'
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-100 text-gray-700'
                       }`}
                     >
-                      {inquiry.status === 'PENDING' ? 'در انتظار' : inquiry.status === 'REPLIED' ? 'پاسخ داده شده' : 'بسته شده'}
+                      {inquiry.status === 'NEW' ? 'جدید' : inquiry.status === 'ANSWERED' ? 'پاسخ داده شده' : 'بسته شده'}
                     </span>
                     <p className="text-xs text-gray-400 mt-1">{formatDate(inquiry.createdAt)}</p>
                   </div>

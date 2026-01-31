@@ -17,7 +17,7 @@ async function getPost(slug: string) {
   return prisma.post.findUnique({
     where: { slug },
     include: {
-      category: {
+      postCategory: {
         select: { nameFa: true, slug: true }
       }
     }
@@ -90,9 +90,9 @@ export default async function BlogPostPage({ params }: PageProps) {
           <div className="max-w-3xl mx-auto">
             {/* Header */}
             <header className="mb-8">
-              {post.category && (
+              {post.postCategory && (
                 <span className="inline-block bg-primary text-white text-sm px-3 py-1 rounded-full mb-4">
-                  {post.category.nameFa}
+                  {post.postCategory.nameFa}
                 </span>
               )}
 

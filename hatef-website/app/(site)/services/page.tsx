@@ -11,8 +11,8 @@ interface Service {
   id: string
   slug: string
   titleFa: string
-  descriptionFa: string | null
   shortDesc: string | null
+  fullDesc: string | null
   icon: string | null
   image: string | null
 }
@@ -101,7 +101,7 @@ export default async function ServicesPage() {
                       </div>
 
                       <p className="text-gray-600 mb-4">
-                        {service.shortDesc || service.descriptionFa?.substring(0, 100)}
+                        {service.shortDesc || ''}
                       </p>
 
                       <span className="inline-flex items-center gap-1 text-primary text-sm font-medium group-hover:gap-2 transition-all">

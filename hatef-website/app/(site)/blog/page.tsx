@@ -15,7 +15,7 @@ interface Post {
   excerpt: string | null
   author: string | null
   publishedAt: Date | null
-  category: { nameFa: string; slug: string } | null
+  postCategory: { nameFa: string; slug: string } | null
 }
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ async function getPosts(page: number = 1, limit: number = 9) {
       skip,
       take: limit,
       include: {
-        category: {
+        postCategory: {
           select: { nameFa: true, slug: true }
         }
       }
@@ -95,9 +95,9 @@ export default async function BlogPage() {
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    {post.category && (
+                    {post.postCategory && (
                       <span className="absolute top-4 right-4 bg-primary text-white text-xs px-3 py-1 rounded-full">
-                        {post.category.nameFa}
+                        {post.postCategory.nameFa}
                       </span>
                     )}
                   </div>

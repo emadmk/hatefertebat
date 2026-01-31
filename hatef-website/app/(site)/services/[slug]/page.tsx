@@ -14,7 +14,7 @@ interface PageProps {
 
 interface OtherService {
   id: string
-  title: string
+  titleFa: string
   slug: string
   icon: string | null
 }
@@ -44,7 +44,7 @@ async function getOtherServices(currentId: string): Promise<OtherService[]> {
       status: 'PUBLISHED',
       id: { not: currentId },
     },
-    select: { id: true, title: true, slug: true, icon: true },
+    select: { id: true, titleFa: true, slug: true, icon: true },
     orderBy: { order: 'asc' },
     take: 4,
   })
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: service.title,
+    title: service.titleFa,
     description: service.shortDesc || undefined,
   }
 }
@@ -79,7 +79,7 @@ export default async function ServicePage({ params }: PageProps) {
   const breadcrumbItems = [
     { name: 'خانه', url: '/' },
     { name: 'خدمات', url: '/services' },
-    { name: service.title, url: `/services/${service.slug}` },
+    { name: service.titleFa, url: `/services/${service.slug}` },
   ]
 
   return (
@@ -94,7 +94,7 @@ export default async function ServicePage({ params }: PageProps) {
       {/* Page Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-dark text-center">{service.title}</h1>
+          <h1 className="text-3xl font-bold text-dark text-center">{service.titleFa}</h1>
           <p className="text-gray-500 text-center mt-2">{service.shortDesc}</p>
         </div>
       </div>
@@ -138,7 +138,7 @@ export default async function ServicePage({ params }: PageProps) {
                       <SvcIcon className="w-5 h-5 text-primary" />
                     </div>
                     <span className="text-dark font-medium group-hover:text-primary transition-colors">
-                      {s.title}
+                      {s.titleFa}
                     </span>
                   </Link>
                 )
@@ -154,9 +154,9 @@ export default async function ServicePage({ params }: PageProps) {
           <div className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-dark mb-2 text-center">درخواست خدمات</h2>
             <p className="text-gray-500 text-center mb-8">
-              برای درخواست خدمات {service.title}، فرم زیر را تکمیل کنید
+              برای درخواست خدمات {service.titleFa}، فرم زیر را تکمیل کنید
             </p>
-            <ServiceRequestForm serviceTitle={service.title} />
+            <ServiceRequestForm serviceTitle={service.titleFa} />
           </div>
         </div>
       </div>

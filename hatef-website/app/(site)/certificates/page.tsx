@@ -8,11 +8,16 @@ export const dynamic = 'force-dynamic'
 
 interface Certificate {
   id: string
-  title: string
+  titleFa: string
   description: string | null
   image: string | null
   issuer: string | null
-  year: string | null
+  issueDate: Date | null
+}
+
+function formatYear(date: Date | null): string {
+  if (!date) return ''
+  return new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(date)
 }
 
 export const metadata: Metadata = {
@@ -78,7 +83,7 @@ export default async function CertificatesPage() {
                 <div className="relative aspect-[4/3] bg-gray-100">
                   <Image
                     src={cert.image || '/images/certificates/default.jpg'}
-                    alt={cert.title}
+                    alt={cert.titleFa}
                     fill
                     className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
                   />
@@ -90,9 +95,9 @@ export default async function CertificatesPage() {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-primary font-medium">{cert.issuer || ''}</span>
-                    <span className="text-xs text-gray-400">{cert.year || ''}</span>
+                    <span className="text-xs text-gray-400">{formatYear(cert.issueDate)}</span>
                   </div>
-                  <h3 className="font-bold text-dark mb-2">{cert.title}</h3>
+                  <h3 className="font-bold text-dark mb-2">{cert.titleFa}</h3>
                   <p className="text-gray-600 text-sm">{cert.description || ''}</p>
                 </div>
               </div>

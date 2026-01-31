@@ -30,8 +30,8 @@ interface RelatedProduct {
 
 interface RawProduct {
   id: string
-  nameFa: string
-  nameEn: string | null
+  titleFa: string
+  titleEn: string | null
   slug: string
   shortDesc: string | null
   image: string | null
@@ -70,8 +70,8 @@ async function getRelatedProducts(categoryId: string | null, currentProductId: s
 
   return (products as RawProduct[]).map((p) => ({
     id: p.id,
-    titleFa: p.nameFa,
-    titleEn: p.nameEn,
+    titleFa: p.titleFa,
+    titleEn: p.titleEn,
     slug: p.slug,
     shortDesc: p.shortDesc,
     image: p.image,
