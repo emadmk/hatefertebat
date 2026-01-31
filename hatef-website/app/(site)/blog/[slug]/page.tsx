@@ -5,40 +5,56 @@ import Link from 'next/link'
 import { Calendar, User, ArrowRight } from 'lucide-react'
 import { Breadcrumb } from '@/components/common'
 import { generateArticleSchema } from '@/lib/seo'
+import { prisma } from '@/lib/db'
 
-const mockPost = {
-  id: '1',
-  titleFa: 'راهنمای انتخاب دوربین مداربسته مناسب',
-  slug: 'choosing-right-cctv',
-  content: `<p>انتخاب دوربین مداربسته مناسب برای محیط‌های مختلف نیازمند توجه به چندین فاکتور مهم است. در این مقاله به بررسی این فاکتورها می‌پردازیم.</p>
-  <h2>۱. نوع محیط</h2>
-  <p>اولین قدم در انتخاب دوربین، مشخص کردن نوع محیط است. آیا دوربین برای فضای داخلی است یا خارجی؟ آیا شرایط نوری خاصی دارد؟</p>
-  <h2>۲. رزولوشن تصویر</h2>
-  <p>رزولوشن تصویر تعیین‌کننده کیفیت و جزئیات تصویر ضبط شده است. برای کاربردهای عمومی ۲ مگاپیکسل کافی است اما برای شناسایی چهره ۴ مگاپیکسل یا بالاتر توصیه می‌شود.</p>
-  <h2>۳. دید در شب</h2>
-  <p>اگر نیاز به نظارت شبانه دارید، باید دوربینی با قابلیت دید در شب مناسب انتخاب کنید.</p>`,
-  excerpt: 'در این مقاله به بررسی نکات مهم در انتخاب دوربین مداربسته می‌پردازیم.',
-  image: '/images/blog/cctv-guide.jpg',
-  author: 'تیم فنی',
-  publishedAt: '۱۴۰۲/۰۹/۱۵',
-  category: { nameFa: 'راهنما', slug: 'guide' },
-}
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params: _params }: PageProps): Promise<Metadata> {
+async function getPost(slug: string) {
+  return prisma.post.findUnique({
+    where: { slug },
+    include: {
+      category: {
+        select: { nameFa: true, slug: true }
+      }
+    }
+  })
+}
+
+function formatDate(date: Date | null): string {
+  if (!date) return ''
+  return new Intl.DateTimeFormat('fa-IR').format(date)
+}
+
+function formatDateISO(date: Date | null): string {
+  if (!date) return new Date().toISOString()
+  return date.toISOString()
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getPost(slug)
+
+  if (!post) {
+    return { title: 'مقاله یافت نشد' }
+  }
+
   return {
-    title: mockPost.titleFa,
-    description: mockPost.excerpt,
+    title: post.titleFa,
+    description: post.excerpt || '',
   }
 }
 
-export default function BlogPostPage({ params: _params }: PageProps) {
-  const post = mockPost
+export default async function BlogPostPage({ params }: PageProps) {
+  const { slug } = await params
+  const post = await getPost(slug)
 
-  if (!post) notFound()
+  if (!post || post.status !== 'PUBLISHED') {
+    notFound()
+  }
 
   const breadcrumbItems = [
     { name: 'خانه', url: '/' },
@@ -48,11 +64,11 @@ export default function BlogPostPage({ params: _params }: PageProps) {
 
   const articleSchema = generateArticleSchema({
     title: post.titleFa,
-    description: post.excerpt,
-    image: post.image,
-    author: post.author,
-    datePublished: '2023-12-06',
-    dateModified: '2023-12-06',
+    description: post.excerpt || '',
+    image: post.image || '/images/blog/default.jpg',
+    author: post.author || 'تیم فنی',
+    datePublished: formatDateISO(post.publishedAt),
+    dateModified: formatDateISO(post.updatedAt),
     url: `https://hatefertebat.ir/blog/${post.slug}`,
   })
 
@@ -74,39 +90,43 @@ export default function BlogPostPage({ params: _params }: PageProps) {
           <div className="max-w-3xl mx-auto">
             {/* Header */}
             <header className="mb-8">
-              <span className="inline-block bg-primary text-white text-sm px-3 py-1 rounded-full mb-4">
-                {post.category.nameFa}
-              </span>
+              {post.category && (
+                <span className="inline-block bg-primary text-white text-sm px-3 py-1 rounded-full mb-4">
+                  {post.category.nameFa}
+                </span>
+              )}
 
               <h1 className="text-3xl font-bold text-dark mb-4">{post.titleFa}</h1>
 
               <div className="flex items-center gap-6 text-gray-500 text-sm">
                 <span className="flex items-center gap-1">
                   <User className="w-4 h-4" />
-                  {post.author}
+                  {post.author || 'تیم فنی'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {post.publishedAt}
+                  {formatDate(post.publishedAt)}
                 </span>
               </div>
             </header>
 
             {/* Featured Image */}
-            <div className="relative aspect-video rounded-xl overflow-hidden mb-8">
-              <Image
-                src={post.image}
-                alt={post.titleFa}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
+            {post.image && (
+              <div className="relative aspect-video rounded-xl overflow-hidden mb-8">
+                <Image
+                  src={post.image}
+                  alt={post.titleFa}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            )}
 
             {/* Content */}
             <div
               className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: post.content || '' }}
             />
 
             {/* Back Link */}

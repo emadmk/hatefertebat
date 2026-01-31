@@ -1,56 +1,80 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { Breadcrumb } from '@/components/common'
+import { Breadcrumb, Pagination } from '@/components/common'
 import ProductCard from '@/components/products/ProductCard'
+import { prisma } from '@/lib/db'
 
-const brandsData: Record<string, { name: string; logo: string; description: string }> = {
-  motorola: {
-    name: 'Motorola',
-    logo: '/images/brands/motorola.png',
-    description: 'موتورولا یکی از پیشگامان صنعت ارتباطات بی‌سیم است که تجهیزات حرفه‌ای و قابل اعتماد را برای صنایع مختلف ارائه می‌دهد.',
-  },
-  avigilon: {
-    name: 'Avigilon',
-    logo: '/images/brands/avigilon.png',
-    description: 'آویژیلون ارائه‌دهنده راهکارهای پیشرفته نظارت تصویری با فناوری هوش مصنوعی و آنالیز ویدیویی است.',
-  },
-  cambium: {
-    name: 'Cambium Networks',
-    logo: '/images/brands/cambium.png',
-    description: 'کمبیوم نتورکز راهکارهای شبکه بی‌سیم و اتصال را برای محیط‌های مختلف ارائه می‌دهد.',
-  },
-  industronic: {
-    name: 'Industronic',
-    logo: '/images/brands/industronic.png',
-    description: 'ایندوسترونیک تولیدکننده سیستم‌های پیجینگ و اطلاع‌رسانی صنعتی با کیفیت بالا است.',
-  },
-}
-
-const mockProducts = [
-  { id: '1', titleFa: 'محصول نمونه ۱', slug: 'product-1', shortDesc: 'توضیحات محصول', image: '/images/products/keypad.png' },
-  { id: '2', titleFa: 'محصول نمونه ۲', slug: 'product-2', shortDesc: 'توضیحات محصول', image: '/images/products/intercom.png' },
-  { id: '3', titleFa: 'محصول نمونه ۳', slug: 'product-3', shortDesc: 'توضیحات محصول', image: '/images/products/reader.png' },
-]
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ page?: string }>
+}
+
+async function getBrand(slug: string) {
+  return prisma.brand.findUnique({
+    where: { slug },
+  })
+}
+
+async function getProductsByBrand(brandId: string, page: number = 1, limit: number = 12) {
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        brandId,
+        status: 'PUBLISHED',
+      },
+      include: {
+        category: { select: { id: true, nameFa: true, slug: true } },
+        brand: { select: { id: true, name: true, slug: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.product.count({
+      where: {
+        brandId,
+        status: 'PUBLISHED',
+      },
+    }),
+  ])
+
+  return { products, total, totalPages: Math.ceil(total / limit) }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const brand = brandsData[params.slug]
-  if (!brand) return { title: 'برند یافت نشد' }
-  return { title: brand.name, description: brand.description }
+  const { slug } = await params
+  const brand = await getBrand(slug)
+
+  if (!brand) {
+    return { title: 'برند یافت نشد' }
+  }
+
+  return {
+    title: `محصولات ${brand.name}`,
+    description: `مشاهده تمامی محصولات برند ${brand.name}`,
+  }
 }
 
-export default function BrandPage({ params }: PageProps) {
-  const brand = brandsData[params.slug]
-  if (!brand) notFound()
+export default async function BrandPage({ params, searchParams }: PageProps) {
+  const { slug } = await params
+  const { page } = await searchParams
+  const currentPage = parseInt(page || '1', 10)
+
+  const brand = await getBrand(slug)
+
+  if (!brand) {
+    notFound()
+  }
+
+  const { products, total, totalPages } = await getProductsByBrand(brand.id, currentPage)
 
   const breadcrumbItems = [
     { name: 'خانه', url: '/' },
     { name: 'برندها', url: '/brands' },
-    { name: brand.name, url: `/brands/${params.slug}` },
+    { name: brand.name, url: `/brands/${brand.slug}` },
   ]
 
   return (
@@ -63,21 +87,42 @@ export default function BrandPage({ params }: PageProps) {
 
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-12 text-center">
-          <div className="relative w-48 h-24 mx-auto mb-6">
-            <Image src={brand.logo} alt={brand.name} fill className="object-contain" />
-          </div>
+          {brand.logo && (
+            <div className="relative w-48 h-24 mx-auto mb-6">
+              <Image src={brand.logo} alt={brand.name} fill className="object-contain" />
+            </div>
+          )}
           <h1 className="text-3xl font-bold text-dark mb-4">{brand.name}</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">{brand.description}</p>
+          <p className="text-gray-500">{total} محصول</p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12">
         <h2 className="text-2xl font-bold text-dark mb-8">محصولات {brand.name}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockProducts.map((product) => (
-            <ProductCard key={product.id} product={product} showCompare={false} />
-          ))}
-        </div>
+
+        {products.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            محصولی برای این برند یافت نشد
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} showCompare={false} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  baseUrl={`/brands/${slug}`}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

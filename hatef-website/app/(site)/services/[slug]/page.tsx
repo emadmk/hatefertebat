@@ -1,93 +1,77 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
-import { Settings, Truck, Cpu, Radio } from 'lucide-react'
+import { Camera, Radio, Shield, Headphones, Network, Volume2, Settings, Truck, Wrench, Cpu } from 'lucide-react'
 import { Breadcrumb } from '@/components/common'
 import ServiceRequestForm from '@/components/forms/ServiceRequestForm'
+import { prisma } from '@/lib/db'
 
-// Mock data
-const servicesData: Record<string, {
-  id: string
-  titleFa: string
-  slug: string
-  shortDesc: string
-  fullDesc: string
-  image: string
-  icon: string
-}> = {
-  setup: {
-    id: '1',
-    titleFa: 'نصب',
-    slug: 'setup',
-    shortDesc: 'تیم تکنسین های مجرب این شرکت می توانند تجهیزات را در سایت ...',
-    fullDesc: 'تیم تکنسین های مجرب این شرکت می توانند تجهیزات را در سایت مشتری نصب کنند و از تنظیم و پیکربندی صحیح آن اطمینان حاصل کنند.',
-    image: '/images/services/setup.jpg',
-    icon: 'wrench',
-  },
-  installation: {
-    id: '2',
-    titleFa: 'راه اندازی',
-    slug: 'installation',
-    shortDesc: 'راه‌اندازی و پیکربندی کامل سیستم‌های امنیتی و مخابراتی',
-    fullDesc: 'تیم متخصص ما با تجربه گسترده در راه‌اندازی سیستم‌های پیچیده، تمامی مراحل نصب و پیکربندی را به صورت حرفه‌ای انجام می‌دهد.',
-    image: '/images/services/installation.jpg',
-    icon: 'settings',
-  },
-  equipment: {
-    id: '3',
-    titleFa: 'تامین تجهیزات',
-    slug: 'equipment',
-    shortDesc: 'تامین تجهیزات اصلی از برندهای معتبر جهانی',
-    fullDesc: 'با نمایندگی رسمی برندهای موتورولا، آویژیلون، کمبیوم و ایندوسترونیک، تجهیزات اصل با گارانتی معتبر را تامین می‌کنیم.',
-    image: '/images/services/equipment.jpg',
-    icon: 'truck',
-  },
-  engineering: {
-    id: '4',
-    titleFa: 'مهندسی',
-    slug: 'engineering',
-    shortDesc: 'طراحی و مهندسی سیستم‌های یکپارچه امنیتی',
-    fullDesc: 'تیم مهندسی ما با تحلیل نیازهای شما، بهترین راهکار فنی را طراحی و پیاده‌سازی می‌کند.',
-    image: '/images/services/engineering.jpg',
-    icon: 'cpu',
-  },
-}
-
-const otherServices = [
-  { titleFa: 'راه اندازی', slug: 'installation', icon: Settings },
-  { titleFa: 'تامین تجهیزات', slug: 'equipment', icon: Truck },
-  { titleFa: 'مهندسی', slug: 'engineering', icon: Cpu },
-]
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
+}
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Camera,
+  Radio,
+  Shield,
+  Headphones,
+  Network,
+  Volume2,
+  Settings,
+  Truck,
+  Wrench,
+  Cpu,
+}
+
+async function getService(slug: string) {
+  return prisma.service.findUnique({
+    where: { slug },
+  })
+}
+
+async function getOtherServices(currentId: string) {
+  return prisma.service.findMany({
+    where: {
+      status: 'PUBLISHED',
+      id: { not: currentId },
+    },
+    select: { id: true, title: true, slug: true, icon: true },
+    orderBy: { order: 'asc' },
+    take: 4,
+  })
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const service = servicesData[params.slug]
+  const { slug } = await params
+  const service = await getService(slug)
 
   if (!service) {
     return { title: 'خدمت یافت نشد' }
   }
 
   return {
-    title: service.titleFa,
-    description: service.shortDesc,
+    title: service.title,
+    description: service.shortDesc || undefined,
   }
 }
 
-export default function ServicePage({ params }: PageProps) {
-  const service = servicesData[params.slug]
+export default async function ServicePage({ params }: PageProps) {
+  const { slug } = await params
+  const service = await getService(slug)
 
-  if (!service) {
+  if (!service || service.status !== 'PUBLISHED') {
     notFound()
   }
+
+  const otherServices = await getOtherServices(service.id)
+  const IconComponent = iconMap[service.icon || ''] || Shield
 
   const breadcrumbItems = [
     { name: 'خانه', url: '/' },
     { name: 'خدمات', url: '/services' },
-    { name: service.titleFa, url: `/services/${service.slug}` },
+    { name: service.title, url: `/services/${service.slug}` },
   ]
 
   return (
@@ -102,64 +86,55 @@ export default function ServicePage({ params }: PageProps) {
       {/* Page Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-dark text-center">{service.titleFa}</h1>
+          <h1 className="text-3xl font-bold text-dark text-center">{service.title}</h1>
           <p className="text-gray-500 text-center mt-2">{service.shortDesc}</p>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Image */}
-          <div className="relative">
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
-              <Image
-                src={service.image}
-                alt={service.titleFa}
-                fill
-                className="object-cover"
-              />
-              {/* Decorative frame */}
-              <div className="absolute -bottom-4 -right-4 w-full h-full border-4 border-primary rounded-2xl -z-10" />
-            </div>
-          </div>
-
-          {/* Content */}
-          <div>
+        <div className="grid lg:grid-cols-3 gap-12 items-start">
+          {/* Content - 2 columns */}
+          <div className="lg:col-span-2">
             {/* Icon */}
             <div className="w-20 h-20 bg-orange-50 rounded-2xl flex items-center justify-center mb-6">
-              <Radio className="w-10 h-10 text-primary" />
+              <IconComponent className="w-10 h-10 text-primary" />
             </div>
 
             {/* Description */}
-            <p className="text-gray-600 leading-relaxed text-lg mb-8">
-              {service.fullDesc}
-            </p>
+            {service.fullDesc ? (
+              <div
+                className="prose prose-lg max-w-none text-gray-600"
+                dangerouslySetInnerHTML={{ __html: service.fullDesc }}
+              />
+            ) : (
+              <p className="text-gray-600 leading-relaxed text-lg">
+                {service.shortDesc}
+              </p>
+            )}
+          </div>
 
-            {/* Other Services */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="font-bold text-dark mb-4">دیگر خدمات :</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {otherServices
-                  .filter((s) => s.slug !== params.slug)
-                  .map((s) => {
-                    const IconComponent = s.icon
-                    return (
-                      <Link
-                        key={s.slug}
-                        href={`/services/${s.slug}`}
-                        className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-sm transition-all group"
-                      >
-                        <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <IconComponent className="w-5 h-5 text-primary" />
-                        </div>
-                        <span className="text-dark font-medium group-hover:text-primary transition-colors">
-                          {s.titleFa}
-                        </span>
-                      </Link>
-                    )
-                  })}
-              </div>
+          {/* Sidebar - Other Services */}
+          <div className="bg-gray-50 rounded-xl p-6">
+            <h3 className="font-bold text-dark mb-4">دیگر خدمات:</h3>
+            <div className="space-y-3">
+              {otherServices.map((s) => {
+                const SvcIcon = iconMap[s.icon || ''] || Shield
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/services/${s.slug}`}
+                    className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-sm transition-all group"
+                  >
+                    <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <SvcIcon className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-dark font-medium group-hover:text-primary transition-colors">
+                      {s.title}
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -171,9 +146,9 @@ export default function ServicePage({ params }: PageProps) {
           <div className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-dark mb-2 text-center">درخواست خدمات</h2>
             <p className="text-gray-500 text-center mb-8">
-              برای درخواست خدمات {service.titleFa}، فرم زیر را تکمیل کنید
+              برای درخواست خدمات {service.title}، فرم زیر را تکمیل کنید
             </p>
-            <ServiceRequestForm serviceTitle={service.titleFa} />
+            <ServiceRequestForm serviceTitle={service.title} />
           </div>
         </div>
       </div>

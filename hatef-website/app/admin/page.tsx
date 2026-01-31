@@ -5,67 +5,58 @@ import {
   MessageSquare,
   TrendingUp,
   ArrowUpLeft,
-  ArrowDownLeft,
+  FileText,
+  FolderOpen,
+  Award,
+  Briefcase,
 } from 'lucide-react'
+import { prisma } from '@/lib/db'
 
-const stats = [
-  {
-    name: 'کل محصولات',
-    value: '۱۲۵',
-    change: '+۵',
-    changeType: 'increase',
-    icon: Package,
-    href: '/admin/products',
-  },
-  {
-    name: 'بازدید امروز',
-    value: '۱,۲۳۴',
-    change: '+۱۲%',
-    changeType: 'increase',
-    icon: Eye,
-    href: '/admin',
-  },
-  {
-    name: 'استعلام‌های جدید',
-    value: '۱۸',
-    change: '+۳',
-    changeType: 'increase',
-    icon: MessageSquare,
-    href: '/admin/inquiries',
-  },
-  {
-    name: 'نرخ تبدیل',
-    value: '۳.۲%',
-    change: '-۰.۵%',
-    changeType: 'decrease',
-    icon: TrendingUp,
-    href: '/admin',
-  },
-]
+export const dynamic = 'force-dynamic'
 
-const recentInquiries = [
-  {
-    id: '1',
-    name: 'علی محمدی',
-    product: 'بی‌سیم موتورولا DP4801e',
-    date: '۱۴۰۲/۱۰/۱۵',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    name: 'زهرا احمدی',
-    product: 'دوربین مداربسته Avigilon',
-    date: '۱۴۰۲/۱۰/۱۴',
-    status: 'replied',
-  },
-  {
-    id: '3',
-    name: 'محمد رضایی',
-    product: 'سیستم کنترل دسترسی',
-    date: '۱۴۰۲/۱۰/۱۴',
-    status: 'pending',
-  },
-]
+async function getStats() {
+  const [
+    productCount,
+    inquiryCount,
+    postCount,
+    projectCount,
+    pendingInquiries,
+    recentInquiries,
+  ] = await Promise.all([
+    prisma.product.count(),
+    prisma.inquiry.count(),
+    prisma.post.count({ where: { status: 'PUBLISHED' } }),
+    prisma.project.count({ where: { status: 'PUBLISHED' } }),
+    prisma.inquiry.count({ where: { status: 'PENDING' } }),
+    prisma.inquiry.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        product: {
+          select: { nameFa: true }
+        }
+      }
+    }),
+  ])
+
+  return {
+    productCount,
+    inquiryCount,
+    postCount,
+    projectCount,
+    pendingInquiries,
+    recentInquiries,
+  }
+}
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('fa-IR').format(date)
+}
+
+function toPersianNumber(num: number): string {
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+  return num.toString().replace(/\d/g, (d) => persianDigits[parseInt(d)])
+}
 
 const quickActions = [
   { name: 'افزودن محصول', href: '/admin/products/new' },
@@ -74,35 +65,60 @@ const quickActions = [
   { name: 'تنظیمات سایت', href: '/admin/settings' },
 ]
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  const stats = await getStats()
+
+  const statCards = [
+    {
+      name: 'کل محصولات',
+      value: toPersianNumber(stats.productCount),
+      icon: Package,
+      href: '/admin/products',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      name: 'استعلام‌های جدید',
+      value: toPersianNumber(stats.pendingInquiries),
+      icon: MessageSquare,
+      href: '/admin/inquiries',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50',
+    },
+    {
+      name: 'مقالات منتشر شده',
+      value: toPersianNumber(stats.postCount),
+      icon: FileText,
+      href: '/admin/posts',
+      color: 'text-green-500',
+      bgColor: 'bg-green-50',
+    },
+    {
+      name: 'پروژه‌های انجام شده',
+      value: toPersianNumber(stats.projectCount),
+      icon: Briefcase,
+      href: '/admin/projects',
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50',
+    },
+  ]
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-dark mb-6">داشبورد</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Link
             key={stat.name}
             href={stat.href}
             className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <stat.icon className="w-6 h-6 text-primary" />
+              <div className={`p-3 ${stat.bgColor} rounded-lg`}>
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
-              <span
-                className={`flex items-center text-sm font-medium ${
-                  stat.changeType === 'increase' ? 'text-green-500' : 'text-red-500'
-                }`}
-              >
-                {stat.change}
-                {stat.changeType === 'increase' ? (
-                  <ArrowUpLeft className="w-4 h-4" />
-                ) : (
-                  <ArrowDownLeft className="w-4 h-4" />
-                )}
-              </span>
             </div>
             <h3 className="text-2xl font-bold text-dark mb-1">{stat.value}</h3>
             <p className="text-gray-500 text-sm">{stat.name}</p>
@@ -121,26 +137,34 @@ export default function AdminDashboard() {
           </div>
 
           <div className="divide-y">
-            {recentInquiries.map((inquiry) => (
-              <div key={inquiry.id} className="flex items-center justify-between p-4">
-                <div>
-                  <h4 className="font-medium text-dark">{inquiry.name}</h4>
-                  <p className="text-sm text-gray-500">{inquiry.product}</p>
-                </div>
-                <div className="text-left">
-                  <span
-                    className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      inquiry.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-green-100 text-green-700'
-                    }`}
-                  >
-                    {inquiry.status === 'pending' ? 'در انتظار' : 'پاسخ داده شده'}
-                  </span>
-                  <p className="text-xs text-gray-400 mt-1">{inquiry.date}</p>
-                </div>
+            {stats.recentInquiries.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                استعلامی ثبت نشده است
               </div>
-            ))}
+            ) : (
+              stats.recentInquiries.map((inquiry) => (
+                <div key={inquiry.id} className="flex items-center justify-between p-4">
+                  <div>
+                    <h4 className="font-medium text-dark">{inquiry.name}</h4>
+                    <p className="text-sm text-gray-500">{inquiry.product?.nameFa || 'بدون محصول'}</p>
+                  </div>
+                  <div className="text-left">
+                    <span
+                      className={`inline-block px-2 py-1 text-xs rounded-full ${
+                        inquiry.status === 'PENDING'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : inquiry.status === 'REPLIED'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {inquiry.status === 'PENDING' ? 'در انتظار' : inquiry.status === 'REPLIED' ? 'پاسخ داده شده' : 'بسته شده'}
+                    </span>
+                    <p className="text-xs text-gray-400 mt-1">{formatDate(inquiry.createdAt)}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
