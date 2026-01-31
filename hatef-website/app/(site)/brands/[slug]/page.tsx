@@ -18,6 +18,17 @@ interface Product {
   brand?: { name: string; slug: string } | null
 }
 
+interface RawProduct {
+  id: string
+  nameFa: string
+  nameEn: string | null
+  slug: string
+  shortDesc: string | null
+  image: string | null
+  category: { nameFa: string; slug: string } | null
+  brand: { name: string; slug: string } | null
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ page?: string }>
@@ -52,7 +63,7 @@ async function getProductsByBrand(brandId: string, page: number = 1, limit: numb
     }),
   ])
 
-  const products: Product[] = rawProducts.map((p) => ({
+  const products: Product[] = (rawProducts as RawProduct[]).map((p) => ({
     id: p.id,
     titleFa: p.nameFa,
     titleEn: p.nameEn,
