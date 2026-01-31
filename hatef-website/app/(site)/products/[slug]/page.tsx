@@ -28,6 +28,17 @@ interface RelatedProduct {
   brand?: { name: string; slug: string } | null
 }
 
+interface RawProduct {
+  id: string
+  nameFa: string
+  nameEn: string | null
+  slug: string
+  shortDesc: string | null
+  image: string | null
+  category: { nameFa: string; slug: string } | null
+  brand: { name: string; slug: string } | null
+}
+
 async function getProduct(slug: string) {
   const product = await prisma.product.findUnique({
     where: { slug },
@@ -57,7 +68,7 @@ async function getRelatedProducts(categoryId: string | null, currentProductId: s
     orderBy: { createdAt: 'desc' },
   })
 
-  return products.map((p) => ({
+  return (products as RawProduct[]).map((p) => ({
     id: p.id,
     titleFa: p.nameFa,
     titleEn: p.nameEn,
