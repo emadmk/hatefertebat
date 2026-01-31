@@ -7,6 +7,17 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Post {
+  id: string
+  slug: string
+  titleFa: string
+  image: string | null
+  excerpt: string | null
+  author: string | null
+  publishedAt: Date | null
+  category: { nameFa: string; slug: string } | null
+}
+
 export const metadata: Metadata = {
   title: 'وبلاگ',
   description: 'مقالات و اخبار کرمان هاتف ارتباط در زمینه تجهیزات مخابراتی و امنیتی',
@@ -32,7 +43,7 @@ async function getPosts(page: number = 1, limit: number = 9) {
     })
   ])
 
-  return { posts, total, totalPages: Math.ceil(total / limit) }
+  return { posts: posts as Post[], total, totalPages: Math.ceil(total / limit) }
 }
 
 function formatDate(date: Date | null): string {
