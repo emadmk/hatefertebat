@@ -9,13 +9,13 @@ export const dynamic = 'force-dynamic'
 
 interface Product {
   id: string
-  nameFa: string
+  titleFa: string
+  titleEn?: string | null
   slug: string
-  image: string | null
-  price: number | null
-  status: string
-  category: { id: string; nameFa: string; slug: string } | null
-  brand: { id: string; name: string; slug: string } | null
+  shortDesc?: string | null
+  image?: string | null
+  category?: { nameFa: string; slug: string } | null
+  brand?: { name: string; slug: string } | null
 }
 
 interface PageProps {
@@ -30,15 +30,15 @@ async function getBrand(slug: string) {
 }
 
 async function getProductsByBrand(brandId: string, page: number = 1, limit: number = 12) {
-  const [products, total] = await Promise.all([
+  const [rawProducts, total] = await Promise.all([
     prisma.product.findMany({
       where: {
         brandId,
         status: 'PUBLISHED',
       },
       include: {
-        category: { select: { id: true, nameFa: true, slug: true } },
-        brand: { select: { id: true, name: true, slug: true } },
+        category: { select: { nameFa: true, slug: true } },
+        brand: { select: { name: true, slug: true } },
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
@@ -52,7 +52,18 @@ async function getProductsByBrand(brandId: string, page: number = 1, limit: numb
     }),
   ])
 
-  return { products: products as Product[], total, totalPages: Math.ceil(total / limit) }
+  const products: Product[] = rawProducts.map((p) => ({
+    id: p.id,
+    titleFa: p.nameFa,
+    titleEn: p.nameEn,
+    slug: p.slug,
+    shortDesc: p.shortDesc,
+    image: p.image,
+    category: p.category,
+    brand: p.brand,
+  }))
+
+  return { products, total, totalPages: Math.ceil(total / limit) }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
