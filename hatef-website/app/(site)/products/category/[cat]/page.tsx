@@ -43,8 +43,9 @@ interface RawProduct {
 }
 
 async function getCategory(slug: string) {
+  const decodedSlug = decodeURIComponent(slug)
   return prisma.category.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
   })
 }
 

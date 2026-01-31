@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { X, Plus, Check, Minus, ArrowRight } from 'lucide-react'
@@ -9,48 +9,13 @@ import { Breadcrumb } from '@/components/common'
 interface CompareProduct {
   id: string
   titleFa: string
-  titleEn: string
+  titleEn?: string
   slug: string
   image: string
-  category: string
-  brand: string
+  category?: string
+  brand?: string
   attributes: { key: string; value: string }[]
 }
-
-const mockProducts: CompareProduct[] = [
-  {
-    id: '1',
-    titleFa: 'صفحه کلید هوشمند استاندارد',
-    titleEn: 'Smart Keypad Standard',
-    slug: 'smart-keypad-standard',
-    image: '/images/products/keypad.png',
-    category: 'کنترل دسترسی',
-    brand: 'Motorola',
-    attributes: [
-      { key: 'نوع ورودی', value: 'PIN + کارت' },
-      { key: 'ظرفیت کاربر', value: '۲۰۰۰' },
-      { key: 'رابط', value: 'Wiegand' },
-      { key: 'ضد آب', value: 'IP65' },
-      { key: 'دما', value: '-۴۰ تا +۷۰' },
-    ],
-  },
-  {
-    id: '2',
-    titleFa: 'VIDEO INTERCOM READER PRO',
-    titleEn: 'Video Intercom Reader Pro',
-    slug: 'video-intercom-reader-pro',
-    image: '/images/products/intercom.png',
-    category: 'کنترل دسترسی',
-    brand: 'Motorola',
-    attributes: [
-      { key: 'نوع ورودی', value: 'چهره + کارت + PIN' },
-      { key: 'ظرفیت کاربر', value: '۵۰۰۰' },
-      { key: 'رابط', value: 'TCP/IP' },
-      { key: 'ضد آب', value: 'IP67' },
-      { key: 'دما', value: '-۲۰ تا +۵۰' },
-    ],
-  },
-]
 
 // Get all unique attributes
 const getAllAttributes = (products: CompareProduct[]) => {
@@ -60,8 +25,31 @@ const getAllAttributes = (products: CompareProduct[]) => {
 }
 
 export default function ComparePage() {
-  const [selectedProducts, setSelectedProducts] = useState<CompareProduct[]>(mockProducts)
-  const [_showAddModal, setShowAddModal] = useState(false)
+  const [selectedProducts, setSelectedProducts] = useState<CompareProduct[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load compare products from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('compareProducts')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) {
+          setSelectedProducts(parsed)
+        }
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+    setIsLoading(false)
+  }, [])
+
+  // Save to localStorage when products change
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('compareProducts', JSON.stringify(selectedProducts))
+    }
+  }, [selectedProducts, isLoading])
 
   const removeProduct = (id: string) => {
     setSelectedProducts((prev) => prev.filter((p) => p.id !== id))
@@ -78,6 +66,14 @@ export default function ComparePage() {
     { name: 'خانه', url: '/' },
     { name: 'مقایسه محصولات', url: '/compare' },
   ]
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">در حال بارگذاری...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -139,7 +135,7 @@ export default function ComparePage() {
                           <Link href={`/products/${product.slug}`}>
                             <div className="relative w-32 h-32 mx-auto bg-gray-100 rounded-lg overflow-hidden mb-3">
                               <Image
-                                src={product.image}
+                                src={product.image || '/images/products/default.jpg'}
                                 alt={product.titleFa}
                                 fill
                                 className="object-contain p-2"
@@ -148,22 +144,24 @@ export default function ComparePage() {
                             <h3 className="font-bold text-dark hover:text-primary transition-colors">
                               {product.titleFa}
                             </h3>
-                            <p className="text-xs text-gray-400" dir="ltr">
-                              {product.titleEn}
-                            </p>
+                            {product.titleEn && (
+                              <p className="text-xs text-gray-400" dir="ltr">
+                                {product.titleEn}
+                              </p>
+                            )}
                           </Link>
                         </div>
                       </th>
                     ))}
                     {selectedProducts.length < 4 && (
                       <th className="p-4 min-w-[200px]">
-                        <button
-                          onClick={() => setShowAddModal(true)}
+                        <Link
+                          href="/products"
                           className="w-32 h-32 mx-auto border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-primary hover:text-primary transition-colors"
                         >
                           <Plus className="w-8 h-8" />
                           <span className="text-sm">افزودن</span>
-                        </button>
+                        </Link>
                       </th>
                     )}
                   </tr>
@@ -175,7 +173,7 @@ export default function ComparePage() {
                     <td className="p-4 font-medium text-gray-700">دسته‌بندی</td>
                     {selectedProducts.map((product) => (
                       <td key={product.id} className="p-4 text-center">
-                        {product.category}
+                        {product.category || '-'}
                       </td>
                     ))}
                     {selectedProducts.length < 4 && <td />}
@@ -184,7 +182,7 @@ export default function ComparePage() {
                     <td className="p-4 font-medium text-gray-700">برند</td>
                     {selectedProducts.map((product) => (
                       <td key={product.id} className="p-4 text-center">
-                        {product.brand}
+                        {product.brand || '-'}
                       </td>
                     ))}
                     {selectedProducts.length < 4 && <td />}

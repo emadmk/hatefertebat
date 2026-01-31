@@ -14,8 +14,9 @@ interface PageProps {
 }
 
 async function getPost(slug: string) {
+  const decodedSlug = decodeURIComponent(slug)
   return prisma.post.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
     include: {
       postCategory: {
         select: { nameFa: true, slug: true }

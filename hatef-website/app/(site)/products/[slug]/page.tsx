@@ -40,8 +40,10 @@ interface RawProduct {
 }
 
 async function getProduct(slug: string) {
+  // Decode URL-encoded slug for Persian characters
+  const decodedSlug = decodeURIComponent(slug)
   const product = await prisma.product.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
     include: {
       category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true } },

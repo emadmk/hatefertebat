@@ -13,8 +13,9 @@ interface PageProps {
 }
 
 async function getProject(slug: string) {
+  const decodedSlug = decodeURIComponent(slug)
   return prisma.project.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
   })
 }
 

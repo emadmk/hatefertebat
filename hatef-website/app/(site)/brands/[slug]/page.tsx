@@ -35,8 +35,9 @@ interface PageProps {
 }
 
 async function getBrand(slug: string) {
+  const decodedSlug = decodeURIComponent(slug)
   return prisma.brand.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
   })
 }
 

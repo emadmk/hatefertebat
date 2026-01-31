@@ -33,8 +33,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 }
 
 async function getService(slug: string) {
+  const decodedSlug = decodeURIComponent(slug)
   return prisma.service.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
   })
 }
 
