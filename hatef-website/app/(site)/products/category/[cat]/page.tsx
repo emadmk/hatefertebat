@@ -3,87 +3,70 @@ import { notFound } from 'next/navigation'
 import ProductCard from '@/components/products/ProductCard'
 import { Breadcrumb, Pagination } from '@/components/common'
 import CategorySidebar from '@/components/products/CategorySidebar'
+import { prisma } from '@/lib/db'
 
-// Mock data
-const mockCategories = [
-  { id: '1', nameFa: 'Security Cameras', nameEn: 'Security Cameras', slug: 'security-cameras', count: 45, description: 'دوربین‌های امنیتی با کیفیت بالا' },
-  { id: '2', nameFa: 'Access Control', nameEn: 'Access Control', slug: 'access-control', count: 32, description: 'سیستم‌های کنترل دسترسی' },
-  { id: '3', nameFa: 'CCTV', nameEn: 'CCTV', slug: 'cctv', count: 28, description: 'سیستم‌های دوربین مداربسته' },
-]
-
-const mockProducts = [
-  {
-    id: '1',
-    titleFa: 'صفحه کلید هوشمند استاندارد',
-    slug: 'smart-keypad-standard',
-    shortDesc: 'ریدر کنترل دسترسی حرفه‌ای Smart Keypad Reader موتورولا با دسترسی مبتنی بر PIN.',
-    image: '/images/products/keypad.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '2',
-    titleFa: 'VIDEO INTERCOM READER PRO',
-    slug: 'video-intercom-reader-pro',
-    shortDesc: 'دستگاه ویدیو اینترکام حرفه‌ای با قابلیت تشخیص چهره.',
-    image: '/images/products/intercom.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '3',
-    titleFa: 'VIDEO READER PRO',
-    slug: 'video-reader-pro',
-    shortDesc: 'ریدر ویدیویی پیشرفته با صفحه نمایش لمسی.',
-    image: '/images/products/reader.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '4',
-    titleFa: 'خوانده هوشمند استاندارد',
-    slug: 'smart-reader-standard',
-    shortDesc: 'ریدر کنترل دسترسی با قابلیت خواندن کارت‌های MIFARE.',
-    image: '/images/products/smart-reader.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '5',
-    titleFa: 'کنترلر تک درب',
-    slug: 'single-door-controller',
-    shortDesc: 'کنترلر یک درب با قابلیت اتصال به شبکه.',
-    image: '/images/products/controller.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '6',
-    titleFa: 'صفحه کلید هوشمند MULLION',
-    slug: 'mullion-smart-keypad',
-    shortDesc: 'صفحه کلید باریک مخصوص نصب در فضاهای محدود.',
-    image: '/images/products/mullion.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '7',
-    titleFa: 'MULLION SMART READER',
-    slug: 'mullion-smart-reader',
-    shortDesc: 'ریدر هوشمند باریک با طراحی مدرن.',
-    image: '/images/products/mullion-reader.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-  {
-    id: '8',
-    titleFa: 'سنسور هوشمند HALO',
-    slug: 'halo-smart-sensor',
-    shortDesc: 'سنسور تشخیص محیطی هوشمند.',
-    image: '/images/products/halo.png',
-    category: { nameFa: 'CCTV', slug: 'cctv' },
-  },
-]
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: { cat: string }
+  params: Promise<{ cat: string }>
+  searchParams: Promise<{ page?: string }>
+}
+
+async function getCategory(slug: string) {
+  return prisma.category.findUnique({
+    where: { slug },
+  })
+}
+
+async function getCategories() {
+  const categories = await prisma.category.findMany({
+    include: {
+      _count: { select: { products: true } },
+    },
+    orderBy: { nameFa: 'asc' },
+  })
+
+  return categories.map((cat) => ({
+    id: cat.id,
+    nameFa: cat.nameFa,
+    nameEn: cat.nameEn,
+    slug: cat.slug,
+    count: cat._count.products,
+  }))
+}
+
+async function getProductsByCategory(categorySlug: string, page: number = 1, limit: number = 12) {
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        category: { slug: categorySlug },
+        status: 'PUBLISHED',
+      },
+      include: {
+        category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
+        brand: { select: { id: true, name: true, slug: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.product.count({
+      where: {
+        category: { slug: categorySlug },
+        status: 'PUBLISHED',
+      },
+    }),
+  ])
+
+  return {
+    products,
+    totalPages: Math.ceil(total / limit),
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const category = mockCategories.find((c) => c.slug === params.cat)
+  const { cat } = await params
+  const category = await getCategory(cat)
 
   if (!category) {
     return { title: 'دسته‌بندی یافت نشد' }
@@ -95,8 +78,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default function CategoryPage({ params }: PageProps) {
-  const category = mockCategories.find((c) => c.slug === params.cat)
+export default async function CategoryPage({ params, searchParams }: PageProps) {
+  const { cat } = await params
+  const { page } = await searchParams
+  const currentPage = parseInt(page || '1', 10)
+
+  const [category, categories, { products, totalPages }] = await Promise.all([
+    getCategory(cat),
+    getCategories(),
+    getProductsByCategory(cat, currentPage),
+  ])
 
   if (!category) {
     notFound()
@@ -131,21 +122,29 @@ export default function CategoryPage({ params }: PageProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <aside className="lg:w-72 flex-shrink-0">
-            <CategorySidebar categories={mockCategories} currentSlug={params.cat} />
+            <CategorySidebar categories={categories} currentSlug={cat} />
           </aside>
 
           {/* Products Grid */}
           <main className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {mockProducts.map((product) => (
-                <ProductCard key={product.id} product={product} showCompare={false} />
-              ))}
-            </div>
+            {products.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} showCompare={false} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">محصولی در این دسته‌بندی یافت نشد</p>
+              </div>
+            )}
 
             {/* Pagination */}
-            <div className="mt-8 flex justify-center">
-              <Pagination currentPage={1} totalPages={3} baseUrl={`/products/category/${params.cat}`} />
-            </div>
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl={`/products/category/${cat}`} />
+              </div>
+            )}
           </main>
         </div>
       </div>

@@ -1,56 +1,121 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, FormEvent } from 'react'
 import Image from 'next/image'
-import { Plus, Edit, Trash2, Upload } from 'lucide-react'
+import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 
-const mockBrands = [
-  {
-    id: '1',
-    name: 'Motorola',
-    slug: 'motorola',
-    logo: '/images/brands/motorola.png',
-    productCount: 35,
-    isActive: true,
-  },
-  {
-    id: '2',
-    name: 'Avigilon',
-    slug: 'avigilon',
-    logo: '/images/brands/avigilon.png',
-    productCount: 28,
-    isActive: true,
-  },
-  {
-    id: '3',
-    name: 'Cambium Networks',
-    slug: 'cambium',
-    logo: '/images/brands/cambium.png',
-    productCount: 22,
-    isActive: true,
-  },
-  {
-    id: '4',
-    name: 'Industronic',
-    slug: 'industronic',
-    logo: '/images/brands/industronic.png',
-    productCount: 15,
-    isActive: true,
-  },
-]
+interface Brand {
+  id: string
+  name: string
+  slug: string
+  logo: string | null
+  _count?: { products: number }
+}
 
 export default function BrandsPage() {
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [editingBrand, setEditingBrand] = useState<typeof mockBrands[0] | null>(null)
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  // Form state
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+
+  const fetchBrands = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/brands')
+      const data = await res.json()
+      if (data.success) {
+        setBrands(data.data.brands || [])
+      }
+    } catch (error) {
+      console.error('Error fetching brands:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchBrands()
+  }, [fetchBrands])
 
   const openAddModal = () => {
     setEditingBrand(null)
+    setName('')
+    setSlug('')
     setShowModal(true)
   }
 
-  const openEditModal = (brand: typeof mockBrands[0]) => {
+  const openEditModal = (brand: Brand) => {
     setEditingBrand(brand)
+    setName(brand.name)
+    setSlug(brand.slug)
     setShowModal(true)
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) return
+
+    setSaving(true)
+    try {
+      const body = { name, slug: slug || undefined }
+      const url = editingBrand
+        ? `/api/admin/brands/${editingBrand.id}`
+        : '/api/admin/brands'
+      const method = editingBrand ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        setShowModal(false)
+        fetchBrands()
+      } else {
+        alert(data.error || 'خطا در ذخیره')
+      }
+    } catch (error) {
+      console.error('Error saving brand:', error)
+      alert('خطا در ذخیره')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('آیا از حذف این برند مطمئن هستید؟')) return
+
+    setDeleting(id)
+    try {
+      const res = await fetch(`/api/admin/brands/${id}`, { method: 'DELETE' })
+      const data = await res.json()
+
+      if (data.success) {
+        fetchBrands()
+      } else {
+        alert(data.error || 'خطا در حذف')
+      }
+    } catch (error) {
+      console.error('Error deleting brand:', error)
+      alert('خطا در حذف')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
@@ -66,45 +131,60 @@ export default function BrandsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {mockBrands.map((brand) => (
-          <div key={brand.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="relative aspect-[3/2] bg-gray-50 p-6">
-              <Image
-                src={brand.logo}
-                alt={brand.name}
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-dark">{brand.name}</h3>
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    brand.isActive ? 'bg-green-500' : 'bg-gray-400'
-                  }`}
-                />
+      {brands.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center text-gray-500">
+          برندی یافت نشد
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {brands.map((brand) => (
+            <div key={brand.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="relative aspect-[3/2] bg-gray-50 p-6">
+                {brand.logo ? (
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name}
+                    fill
+                    className="object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl font-bold">
+                    {brand.name.charAt(0)}
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-gray-500 mb-4">
-                {brand.productCount} محصول
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => openEditModal(brand)}
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
-                >
-                  <Edit className="w-4 h-4" />
-                  ویرایش
-                </button>
-                <button className="p-2 border rounded-lg text-red-500 hover:bg-red-50 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-dark">{brand.name}</h3>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  {brand._count?.products || 0} محصول
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEditModal(brand)}
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Edit className="w-4 h-4" />
+                    ویرایش
+                  </button>
+                  <button
+                    onClick={() => handleDelete(brand.id)}
+                    disabled={deleting === brand.id}
+                    className="p-2 border rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  >
+                    {deleting === brand.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -122,16 +202,18 @@ export default function BrandsPage() {
               </button>
             </div>
 
-            <form className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   نام برند *
                 </label>
                 <input
                   type="text"
-                  defaultValue={editingBrand?.name}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Motorola"
+                  required
                 />
               </div>
 
@@ -141,50 +223,21 @@ export default function BrandsPage() {
                 </label>
                 <input
                   type="text"
-                  defaultValue={editingBrand?.slug}
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="motorola"
                   dir="ltr"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  لوگو
-                </label>
-                <label className="flex items-center gap-3 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-orange-50 transition-colors">
-                  <Upload className="w-6 h-6 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">آپلود لوگو</p>
-                    <p className="text-xs text-gray-400">PNG, SVG - حداکثر ۱ مگابایت</p>
-                  </div>
-                  <input type="file" className="hidden" accept="image/*" />
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  توضیحات
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="توضیحات برند..."
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="isActive" defaultChecked={editingBrand?.isActive ?? true} />
-                <label htmlFor="isActive" className="text-sm text-gray-700">
-                  فعال
-                </label>
-              </div>
-
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition-colors"
+                  disabled={saving}
+                  className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   ذخیره
                 </button>
                 <button

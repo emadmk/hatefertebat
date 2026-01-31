@@ -1,67 +1,57 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Download, Printer, FileText } from 'lucide-react'
+import { Download, FileText } from 'lucide-react'
 import { Breadcrumb } from '@/components/common'
 import ProductCard from '@/components/products/ProductCard'
 import InquiryForm from '@/components/forms/InquiryForm'
 import ProductGallery from '@/components/products/ProductGallery'
+import PrintButton from '@/components/products/PrintButton'
 import { getImageUrl } from '@/lib/utils'
 import { generateProductSchema } from '@/lib/seo'
+import { prisma } from '@/lib/db'
 
-// Mock data
-const mockProduct = {
-  id: '1',
-  titleFa: 'صفحه کلید هوشمند استاندارد',
-  titleEn: 'Smart Keypad Standard',
-  slug: 'smart-keypad-standard',
-  shortDesc: 'توضیحات کوتاه',
-  fullDesc: `<p>ریدر کنترل دسترسی حرفه‌ای Smart Keypad Reader موتورولا با دسترسی مبتنی بر PIN، تاریخچه ورود/خروج به صورت کامل و قابلیت تعریف بیش از ۲۰۰۰ کاربر برای تمامی محیط‌ها طراحی شده است.</p>
-  <p>این دستگاه با بدنه مستحکم و مقاوم در برابر آب و گرد و غبار، برای نصب در محیط‌های داخلی و خارجی مناسب است.</p>`,
-  image: '/images/products/keypad.png',
-  gallery: ['/images/products/keypad.png', '/images/products/keypad-2.png'],
-  catalogFile: '/catalogs/smart-keypad.pdf',
-  category: { nameFa: 'کنترل دسترسی', slug: 'access-control' },
-  brand: { name: 'Motorola', slug: 'motorola' },
-  attributes: [
-    { key: 'دسترسی بدون تماس با', value: '"Wave to Unlock"' },
-    { key: 'احراز هویت چندعاملی', value: '(Multi-factor authentication)' },
-    { key: 'دسترسی با', value: 'PIN' },
-    { key: 'قابلیت قفل آنی', value: '(Lockdown)' },
-  ],
-}
-
-const relatedProducts = [
-  {
-    id: '2',
-    titleFa: 'VIDEO INTERCOM READER PRO',
-    slug: 'video-intercom-reader-pro',
-    shortDesc: 'دستگاه ویدیو اینترکام حرفه‌ای با قابلیت تشخیص چهره، ارتباط تصویری دوطرفه.',
-    image: '/images/products/intercom.png',
-  },
-  {
-    id: '3',
-    titleFa: 'خوانده هوشمند استاندارد',
-    slug: 'smart-reader-standard',
-    shortDesc: 'ریدر کنترل دسترسی با قابلیت خواندن کارت‌های MIFARE و NFC.',
-    image: '/images/products/smart-reader.png',
-  },
-  {
-    id: '4',
-    titleFa: 'کنترلر تک درب',
-    slug: 'single-door-controller',
-    shortDesc: 'کنترلر یک درب با قابلیت اتصال به شبکه و ظرفیت بالا.',
-    image: '/images/products/controller.png',
-  },
-]
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params: _params }: PageProps): Promise<Metadata> {
-  // In real app, fetch from database using _params.slug
-  const product = mockProduct
+async function getProduct(slug: string) {
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    include: {
+      category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
+      brand: { select: { id: true, name: true, slug: true } },
+    },
+  })
+
+  return product
+}
+
+async function getRelatedProducts(categoryId: string | null, currentProductId: string) {
+  if (!categoryId) return []
+
+  const products = await prisma.product.findMany({
+    where: {
+      categoryId,
+      id: { not: currentProductId },
+      status: 'PUBLISHED',
+    },
+    include: {
+      category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
+      brand: { select: { id: true, name: true, slug: true } },
+    },
+    take: 3,
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return products
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  const product = await getProduct(slug)
 
   if (!product) {
     return { title: 'محصول یافت نشد' }
@@ -69,16 +59,48 @@ export async function generateMetadata({ params: _params }: PageProps): Promise<
 
   return {
     title: product.titleFa,
-    description: product.shortDesc,
+    description: product.shortDesc || undefined,
   }
 }
 
-export default function ProductPage({ params: _params }: PageProps) {
-  // In real app, fetch from database using _params.slug
-  const product = mockProduct
+export default async function ProductPage({ params }: PageProps) {
+  const { slug } = await params
+  const product = await getProduct(slug)
 
   if (!product) {
     notFound()
+  }
+
+  const relatedProducts = await getRelatedProducts(product.categoryId, product.id)
+
+  // Parse attributes from JSON string if needed
+  let attributes: { key: string; value: string }[] = []
+  if (product.attributes) {
+    try {
+      const parsed = typeof product.attributes === 'string'
+        ? JSON.parse(product.attributes)
+        : product.attributes
+      if (Array.isArray(parsed)) {
+        attributes = parsed
+      }
+    } catch {
+      // Invalid JSON, ignore
+    }
+  }
+
+  // Parse gallery from JSON string if needed
+  let gallery: string[] = []
+  if (product.gallery) {
+    try {
+      const parsed = typeof product.gallery === 'string'
+        ? JSON.parse(product.gallery)
+        : product.gallery
+      if (Array.isArray(parsed)) {
+        gallery = parsed
+      }
+    } catch {
+      // Invalid JSON, ignore
+    }
   }
 
   const breadcrumbItems = [
@@ -118,7 +140,7 @@ export default function ProductPage({ params: _params }: PageProps) {
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
               {/* Gallery - Right Side */}
               <div>
-                <ProductGallery images={product.gallery || [product.image || '']} title={product.titleFa} />
+                <ProductGallery images={gallery.length > 0 ? gallery : [product.image || '']} title={product.titleFa} />
               </div>
 
               {/* Info - Left Side */}
@@ -181,21 +203,15 @@ export default function ProductPage({ params: _params }: PageProps) {
                     استعلام قیمت
                   </Link>
 
-                  <button
-                    onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 border border-gray-300 text-gray-600 px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Printer className="w-4 h-4" />
-                    پرینت
-                  </button>
+                  <PrintButton />
                 </div>
 
                 {/* Attributes */}
-                {product.attributes && product.attributes.length > 0 && (
+                {attributes.length > 0 && (
                   <div className="border-t pt-6">
                     <h3 className="font-bold text-dark mb-4">ویژگی‌ها:</h3>
                     <ul className="space-y-2">
-                      {product.attributes.map((attr, index) => (
+                      {attributes.map((attr, index) => (
                         <li key={index} className="flex items-start gap-2 text-gray-600">
                           <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
                           <span>
@@ -212,16 +228,18 @@ export default function ProductPage({ params: _params }: PageProps) {
         </div>
 
         {/* Related Products */}
-        <div className="bg-gray-50 py-12">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-dark mb-8">محصولات مشابه</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} showCompare={false} />
-              ))}
+        {relatedProducts.length > 0 && (
+          <div className="bg-gray-50 py-12">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl font-bold text-dark mb-8">محصولات مشابه</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedProducts.map((relProduct) => (
+                  <ProductCard key={relProduct.id} product={relProduct} showCompare={false} />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Inquiry Form */}
         <div id="inquiry" className="bg-white py-12">

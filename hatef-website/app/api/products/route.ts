@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
+
+export const dynamic = 'force-dynamic'
 
 // Validation schema for product query
 const querySchema = z.object({
@@ -10,32 +14,6 @@ const querySchema = z.object({
   search: z.string().optional(),
   sort: z.enum(['newest', 'oldest', 'title']).default('newest'),
 })
-
-// Mock products data
-const mockProducts = [
-  {
-    id: '1',
-    titleFa: 'صفحه کلید هوشمند استاندارد',
-    titleEn: 'Smart Keypad Standard',
-    slug: 'smart-keypad-standard',
-    shortDescription: 'ریدر کنترل دسترسی حرفه‌ای',
-    image: '/images/products/keypad.png',
-    category: { id: '1', slug: 'access-control', nameFa: 'کنترل دسترسی' },
-    brand: { id: '1', slug: 'motorola', name: 'Motorola' },
-    createdAt: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: '2',
-    titleFa: 'VIDEO INTERCOM READER PRO',
-    titleEn: 'Video Intercom Reader Pro',
-    slug: 'video-intercom-reader-pro',
-    shortDescription: 'دستگاه ویدیو اینترکام حرفه‌ای',
-    image: '/images/products/intercom.png',
-    category: { id: '1', slug: 'access-control', nameFa: 'کنترل دسترسی' },
-    brand: { id: '1', slug: 'motorola', name: 'Motorola' },
-    createdAt: '2024-01-14T00:00:00Z',
-  },
-]
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,53 +29,54 @@ export async function GET(request: NextRequest) {
       sort: searchParams.get('sort'),
     })
 
-    // Filter products
-    let filteredProducts = [...mockProducts]
+    // Build where clause
+    const where: Prisma.ProductWhereInput = {
+      status: 'PUBLISHED',
+    }
 
     if (query.category) {
-      filteredProducts = filteredProducts.filter(
-        (p) => p.category.slug === query.category
-      )
+      where.category = { slug: query.category }
     }
 
     if (query.brand) {
-      filteredProducts = filteredProducts.filter(
-        (p) => p.brand.slug === query.brand
-      )
+      where.brand = { slug: query.brand }
     }
 
     if (query.search) {
-      const searchLower = query.search.toLowerCase()
-      filteredProducts = filteredProducts.filter(
-        (p) =>
-          p.titleFa.toLowerCase().includes(searchLower) ||
-          p.titleEn.toLowerCase().includes(searchLower)
-      )
+      where.OR = [
+        { titleFa: { contains: query.search, mode: 'insensitive' } },
+        { titleEn: { contains: query.search, mode: 'insensitive' } },
+        { shortDesc: { contains: query.search, mode: 'insensitive' } },
+      ]
     }
 
-    // Sort
+    // Build orderBy
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' }
     switch (query.sort) {
       case 'oldest':
-        filteredProducts.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        )
+        orderBy = { createdAt: 'asc' }
         break
       case 'title':
-        filteredProducts.sort((a, b) => a.titleFa.localeCompare(b.titleFa, 'fa'))
+        orderBy = { titleFa: 'asc' }
         break
-      default:
-        filteredProducts.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
     }
 
-    // Paginate
-    const total = filteredProducts.length
+    // Execute queries
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
+          brand: { select: { id: true, name: true, slug: true } },
+        },
+        orderBy,
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+      }),
+      prisma.product.count({ where }),
+    ])
+
     const totalPages = Math.ceil(total / query.limit)
-    const offset = (query.page - 1) * query.limit
-    const products = filteredProducts.slice(offset, offset + query.limit)
 
     return NextResponse.json({
       success: true,
