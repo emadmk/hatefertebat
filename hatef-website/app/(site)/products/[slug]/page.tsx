@@ -17,6 +17,17 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
+interface RelatedProduct {
+  id: string
+  titleFa: string
+  titleEn?: string | null
+  slug: string
+  shortDesc?: string | null
+  image?: string | null
+  category?: { nameFa: string; slug: string } | null
+  brand?: { name: string; slug: string } | null
+}
+
 async function getProduct(slug: string) {
   const product = await prisma.product.findUnique({
     where: { slug },
@@ -29,7 +40,7 @@ async function getProduct(slug: string) {
   return product
 }
 
-async function getRelatedProducts(categoryId: string | null, currentProductId: string) {
+async function getRelatedProducts(categoryId: string | null, currentProductId: string): Promise<RelatedProduct[]> {
   if (!categoryId) return []
 
   const products = await prisma.product.findMany({
@@ -39,14 +50,23 @@ async function getRelatedProducts(categoryId: string | null, currentProductId: s
       status: 'PUBLISHED',
     },
     include: {
-      category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
-      brand: { select: { id: true, name: true, slug: true } },
+      category: { select: { nameFa: true, slug: true } },
+      brand: { select: { name: true, slug: true } },
     },
     take: 3,
     orderBy: { createdAt: 'desc' },
   })
 
-  return products
+  return products.map((p) => ({
+    id: p.id,
+    titleFa: p.nameFa,
+    titleEn: p.nameEn,
+    slug: p.slug,
+    shortDesc: p.shortDesc,
+    image: p.image,
+    category: p.category,
+    brand: p.brand,
+  }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
