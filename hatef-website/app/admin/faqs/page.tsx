@@ -1,45 +1,121 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Edit, Trash2, GripVertical, ChevronDown } from 'lucide-react'
+import { useState, useEffect, useCallback, FormEvent } from 'react'
+import { Plus, Edit, Trash2, GripVertical, ChevronDown, Loader2 } from 'lucide-react'
 
-const mockFaqs = [
-  {
-    id: '1',
-    question: 'چگونه می‌توانم سفارش ثبت کنم؟',
-    answer: 'برای ثبت سفارش می‌توانید از طریق فرم استعلام قیمت در صفحه محصول مورد نظر اقدام کنید یا با شماره تلفن ما تماس بگیرید.',
-    category: 'سفارش',
-    order: 1,
-  },
-  {
-    id: '2',
-    question: 'آیا محصولات دارای گارانتی هستند؟',
-    answer: 'بله، تمامی محصولات ما دارای گارانتی اصالت و گارانتی خدمات پس از فروش هستند.',
-    category: 'گارانتی',
-    order: 2,
-  },
-  {
-    id: '3',
-    question: 'هزینه نصب و راه‌اندازی چقدر است؟',
-    answer: 'هزینه نصب و راه‌اندازی بسته به نوع پروژه و تجهیزات متفاوت است. برای دریافت قیمت دقیق، لطفاً با کارشناسان ما تماس بگیرید.',
-    category: 'خدمات',
-    order: 3,
-  },
-]
+interface Faq {
+  id: string
+  question: string
+  answer: string
+  category: string | null
+  order: number
+}
 
 export default function FaqsAdminPage() {
+  const [faqs, setFaqs] = useState<Faq[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [editingFaq, setEditingFaq] = useState<typeof mockFaqs[0] | null>(null)
+  const [editingFaq, setEditingFaq] = useState<Faq | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  // Form state
+  const [question, setQuestion] = useState('')
+  const [answer, setAnswer] = useState('')
+  const [category, setCategory] = useState('')
+
+  const fetchFaqs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/faqs')
+      const data = await res.json()
+      if (data.success) {
+        setFaqs(data.data.faqs || [])
+      }
+    } catch (error) {
+      console.error('Error fetching faqs:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchFaqs()
+  }, [fetchFaqs])
 
   const openAddModal = () => {
     setEditingFaq(null)
+    setQuestion('')
+    setAnswer('')
+    setCategory('')
     setShowModal(true)
   }
 
-  const openEditModal = (faq: typeof mockFaqs[0]) => {
+  const openEditModal = (faq: Faq) => {
     setEditingFaq(faq)
+    setQuestion(faq.question)
+    setAnswer(faq.answer)
+    setCategory(faq.category || '')
     setShowModal(true)
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!question.trim() || !answer.trim()) return
+
+    setSaving(true)
+    try {
+      const body = { question, answer, category: category || null }
+      const url = editingFaq ? `/api/admin/faqs/${editingFaq.id}` : '/api/admin/faqs'
+      const method = editingFaq ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        setShowModal(false)
+        fetchFaqs()
+      } else {
+        alert(data.error || 'خطا در ذخیره')
+      }
+    } catch (error) {
+      console.error('Error saving faq:', error)
+      alert('خطا در ذخیره')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('آیا از حذف این سوال مطمئن هستید؟')) return
+
+    setDeleting(id)
+    try {
+      const res = await fetch(`/api/admin/faqs/${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        fetchFaqs()
+      } else {
+        alert('خطا در حذف')
+      }
+    } catch (error) {
+      console.error('Error deleting faq:', error)
+      alert('خطا در حذف')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
@@ -56,52 +132,66 @@ export default function FaqsAdminPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm divide-y">
-        {mockFaqs.map((faq) => (
-          <div key={faq.id} className="p-4">
-            <div className="flex items-start gap-3">
-              <button className="cursor-grab text-gray-400 hover:text-gray-600 mt-1">
-                <GripVertical className="w-5 h-5" />
-              </button>
-
-              <div className="flex-1">
-                <button
-                  onClick={() => setExpandedId(expandedId === faq.id ? null : faq.id)}
-                  className="w-full flex items-center justify-between text-right"
-                >
-                  <div>
-                    <span className="text-xs text-primary font-medium">{faq.category}</span>
-                    <h3 className="font-medium text-dark">{faq.question}</h3>
-                  </div>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                      expandedId === faq.id ? 'rotate-180' : ''
-                    }`}
-                  />
+        {faqs.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            سوالی یافت نشد
+          </div>
+        ) : (
+          faqs.map((faq) => (
+            <div key={faq.id} className="p-4">
+              <div className="flex items-start gap-3">
+                <button className="cursor-grab text-gray-400 hover:text-gray-600 mt-1">
+                  <GripVertical className="w-5 h-5" />
                 </button>
 
-                {expandedId === faq.id && (
-                  <p className="mt-3 text-gray-600 text-sm">{faq.answer}</p>
-                )}
-              </div>
+                <div className="flex-1">
+                  <button
+                    onClick={() => setExpandedId(expandedId === faq.id ? null : faq.id)}
+                    className="w-full flex items-center justify-between text-right"
+                  >
+                    <div>
+                      {faq.category && (
+                        <span className="text-xs text-primary font-medium">{faq.category}</span>
+                      )}
+                      <h3 className="font-medium text-dark">{faq.question}</h3>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-gray-400 transition-transform ${
+                        expandedId === faq.id ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
 
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => openEditModal(faq)}
-                  className="p-2 text-gray-400 hover:text-primary transition-colors"
-                  title="ویرایش"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                  title="حذف"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  {expandedId === faq.id && (
+                    <p className="mt-3 text-gray-600 text-sm">{faq.answer}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => openEditModal(faq)}
+                    className="p-2 text-gray-400 hover:text-primary transition-colors"
+                    title="ویرایش"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(faq.id)}
+                    disabled={deleting === faq.id}
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                    title="حذف"
+                  >
+                    {deleting === faq.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Modal */}
@@ -120,13 +210,14 @@ export default function FaqsAdminPage() {
               </button>
             </div>
 
-            <form className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   دسته‌بندی
                 </label>
                 <select
-                  defaultValue={editingFaq?.category}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="">انتخاب دسته‌بندی</option>
@@ -144,9 +235,11 @@ export default function FaqsAdminPage() {
                 </label>
                 <input
                   type="text"
-                  defaultValue={editingFaq?.question}
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="سوال را وارد کنید..."
+                  required
                 />
               </div>
 
@@ -156,17 +249,21 @@ export default function FaqsAdminPage() {
                 </label>
                 <textarea
                   rows={4}
-                  defaultValue={editingFaq?.answer}
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="پاسخ را وارد کنید..."
+                  required
                 />
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition-colors"
+                  disabled={saving}
+                  className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   ذخیره
                 </button>
                 <button
