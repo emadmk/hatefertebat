@@ -12,6 +12,13 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
+interface OtherService {
+  id: string
+  title: string
+  slug: string
+  icon: string | null
+}
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Camera,
   Radio,
@@ -31,8 +38,8 @@ async function getService(slug: string) {
   })
 }
 
-async function getOtherServices(currentId: string) {
-  return prisma.service.findMany({
+async function getOtherServices(currentId: string): Promise<OtherService[]> {
+  const services = await prisma.service.findMany({
     where: {
       status: 'PUBLISHED',
       id: { not: currentId },
@@ -41,6 +48,7 @@ async function getOtherServices(currentId: string) {
     orderBy: { order: 'asc' },
     take: 4,
   })
+  return services as OtherService[]
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

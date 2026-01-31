@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
+
+type ProductWhereInput = {
+  status?: string
+  category?: { slug: string }
+  brand?: { slug: string }
+  OR?: Array<{
+    titleFa?: { contains: string; mode: 'insensitive' }
+    titleEn?: { contains: string; mode: 'insensitive' }
+    shortDesc?: { contains: string; mode: 'insensitive' }
+  }>
+}
+
+type ProductOrderByInput = {
+  createdAt?: 'asc' | 'desc'
+  titleFa?: 'asc' | 'desc'
+}
 
 // Validation schema for product query
 const querySchema = z.object({
@@ -30,7 +45,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Build where clause
-    const where: Prisma.ProductWhereInput = {
+    const where: ProductWhereInput = {
       status: 'PUBLISHED',
     }
 
@@ -51,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build orderBy
-    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' }
+    let orderBy: ProductOrderByInput = { createdAt: 'desc' }
     switch (query.sort) {
       case 'oldest':
         orderBy = { createdAt: 'asc' }

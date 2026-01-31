@@ -9,6 +9,14 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+interface Inquiry {
+  id: string
+  name: string
+  status: string
+  createdAt: Date
+  product: { nameFa: string } | null
+}
+
 async function getStats() {
   const [
     productCount,
@@ -40,7 +48,7 @@ async function getStats() {
     postCount,
     projectCount,
     pendingInquiries,
-    recentInquiries,
+    recentInquiries: recentInquiries as Inquiry[],
   }
 }
 
