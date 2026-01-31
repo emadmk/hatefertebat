@@ -12,6 +12,36 @@ interface PageProps {
   searchParams: Promise<{ page?: string }>
 }
 
+interface RawCategory {
+  id: string
+  nameFa: string
+  nameEn: string | null
+  slug: string
+  _count: { products: number }
+}
+
+interface Product {
+  id: string
+  titleFa: string
+  titleEn?: string | null
+  slug: string
+  shortDesc?: string | null
+  image?: string | null
+  category?: { nameFa: string; slug: string } | null
+  brand?: { name: string; slug: string } | null
+}
+
+interface RawProduct {
+  id: string
+  nameFa: string
+  nameEn: string | null
+  slug: string
+  shortDesc: string | null
+  image: string | null
+  category: { id: string; nameFa: string; nameEn: string | null; slug: string } | null
+  brand: { id: string; name: string; slug: string } | null
+}
+
 async function getCategory(slug: string) {
   return prisma.category.findUnique({
     where: { slug },
@@ -26,7 +56,7 @@ async function getCategories() {
     orderBy: { nameFa: 'asc' },
   })
 
-  return categories.map((cat) => ({
+  return (categories as RawCategory[]).map((cat) => ({
     id: cat.id,
     nameFa: cat.nameFa,
     nameEn: cat.nameEn,
@@ -58,8 +88,19 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
     }),
   ])
 
+  const mappedProducts: Product[] = (products as RawProduct[]).map((p) => ({
+    id: p.id,
+    titleFa: p.nameFa,
+    titleEn: p.nameEn,
+    slug: p.slug,
+    shortDesc: p.shortDesc,
+    image: p.image,
+    category: p.category ? { nameFa: p.category.nameFa, slug: p.category.slug } : null,
+    brand: p.brand ? { name: p.brand.name, slug: p.brand.slug } : null,
+  }))
+
   return {
-    products,
+    products: mappedProducts,
     totalPages: Math.ceil(total / limit),
   }
 }
