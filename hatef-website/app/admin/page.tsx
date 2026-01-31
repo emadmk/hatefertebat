@@ -1,13 +1,8 @@
 import Link from 'next/link'
 import {
   Package,
-  Eye,
   MessageSquare,
-  TrendingUp,
-  ArrowUpLeft,
   FileText,
-  FolderOpen,
-  Award,
   Briefcase,
 } from 'lucide-react'
 import { prisma } from '@/lib/db'
