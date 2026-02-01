@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { slugify } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
 const certificateSchema = z.object({
   titleFa: z.string().min(1, 'عنوان فارسی الزامی است'),
-  titleEn: z.string().optional(),
-  slug: z.string().min(1, 'اسلاگ الزامی است'),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  issuer: z.string().optional(),
-  issueDate: z.string().optional(),
+  titleEn: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  issuer: z.string().nullable().optional(),
+  issueDate: z.string().nullable().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
   order: z.number().optional(),
 })
@@ -66,15 +67,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const validatedData = certificateSchema.parse(body)
+    const slug = validatedData.slug || slugify(validatedData.titleFa)
 
     const certificate = await prisma.certificate.create({
       data: {
         titleFa: validatedData.titleFa,
-        titleEn: validatedData.titleEn,
-        slug: validatedData.slug,
-        description: validatedData.description,
-        image: validatedData.image,
-        issuer: validatedData.issuer,
+        titleEn: validatedData.titleEn || null,
+        slug,
+        description: validatedData.description || null,
+        image: validatedData.image || null,
+        issuer: validatedData.issuer || null,
         issueDate: validatedData.issueDate ? new Date(validatedData.issueDate) : null,
         status: validatedData.status || 'DRAFT',
         order: validatedData.order || 0,

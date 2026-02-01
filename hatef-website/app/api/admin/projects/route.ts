@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { slugify } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
 const projectSchema = z.object({
   titleFa: z.string().min(1, 'عنوان فارسی الزامی است'),
-  titleEn: z.string().optional(),
-  slug: z.string().min(1, 'اسلاگ الزامی است'),
-  description: z.string().optional(),
+  titleEn: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   images: z.array(z.string()).optional(),
-  client: z.string().optional(),
-  location: z.string().optional(),
-  year: z.string().optional(),
+  client: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  year: z.string().nullable().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
   featured: z.boolean().optional(),
   order: z.number().optional(),
@@ -68,17 +69,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const validatedData = projectSchema.parse(body)
+    const slug = validatedData.slug || slugify(validatedData.titleFa)
 
     const project = await prisma.project.create({
       data: {
         titleFa: validatedData.titleFa,
-        titleEn: validatedData.titleEn,
-        slug: validatedData.slug,
-        description: validatedData.description,
+        titleEn: validatedData.titleEn || null,
+        slug,
+        description: validatedData.description || null,
         images: validatedData.images || [],
-        client: validatedData.client,
-        location: validatedData.location,
-        year: validatedData.year,
+        client: validatedData.client || null,
+        location: validatedData.location || null,
+        year: validatedData.year || null,
         status: validatedData.status || 'DRAFT',
         featured: validatedData.featured || false,
         order: validatedData.order || 0,
