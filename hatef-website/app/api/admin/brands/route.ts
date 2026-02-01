@@ -21,7 +21,7 @@ export async function GET() {
       include: { _count: { select: { products: true } } },
       orderBy: { order: 'asc' },
     })
-    return NextResponse.json({ success: true, data: brands })
+    return NextResponse.json({ success: true, data: { brands } })
   } catch (error) {
     console.error('Error:', error)
     return NextResponse.json({ success: false, message: 'خطای سرور' }, { status: 500 })

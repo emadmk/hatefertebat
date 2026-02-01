@@ -40,8 +40,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: posts,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      data: {
+        posts,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      },
     })
   } catch (error) {
     console.error('Error:', error)

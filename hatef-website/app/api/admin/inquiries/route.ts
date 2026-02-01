@@ -58,14 +58,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: inquiries,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+      data: {
+        inquiries,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        statusCounts,
       },
-      statusCounts,
     })
   } catch (error) {
     console.error('Error:', error)

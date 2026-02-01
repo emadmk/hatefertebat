@@ -22,7 +22,7 @@ const serviceSchema = z.object({
 export async function GET() {
   try {
     const services = await prisma.service.findMany({ orderBy: { order: 'asc' } })
-    return NextResponse.json({ success: true, data: services })
+    return NextResponse.json({ success: true, data: { services } })
   } catch (error) {
     console.error('Error:', error)
     return NextResponse.json({ success: false, message: 'خطای سرور' }, { status: 500 })

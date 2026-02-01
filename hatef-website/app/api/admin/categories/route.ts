@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { order: 'asc' },
       })
-      return NextResponse.json({ success: true, data: categories })
+      return NextResponse.json({ success: true, data: { categories } })
     }
 
     const categories = await prisma.category.findMany({
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       orderBy: { order: 'asc' },
     })
 
-    return NextResponse.json({ success: true, data: categories })
+    return NextResponse.json({ success: true, data: { categories } })
   } catch (error) {
     console.error('Error fetching categories:', error)
     return NextResponse.json({ success: false, message: 'خطای سرور' }, { status: 500 })
