@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Save } from 'lucide-react'
+import ImageUpload from '../../components/ImageUpload'
 
 const iconOptions = [
   'Camera', 'Radio', 'Shield', 'Headphones', 'Network',
@@ -202,14 +203,11 @@ export default function NewServicePage() {
 
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="font-bold text-dark mb-4">تصویر</h2>
-
-              <input
-                type="text"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                dir="ltr"
-                placeholder="/uploads/..."
+              <ImageUpload
+                value={formData.image || null}
+                onChange={(url) => setFormData({ ...formData, image: url || '' })}
+                folder="services"
+                label="تصویر خدمت"
               />
             </div>
           </div>

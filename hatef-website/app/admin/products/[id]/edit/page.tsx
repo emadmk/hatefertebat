@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowRight, X, Plus, Loader2, Save } from 'lucide-react'
+import ImageUpload from '../../../components/ImageUpload'
+import FileUpload from '../../../components/FileUpload'
 
 interface Category {
   id: string
@@ -185,6 +186,16 @@ export default function EditProductPage() {
     setFormData({ ...formData, attributes: newAttrs })
   }
 
+  const handleAddGalleryImage = (url: string | null) => {
+    if (url) {
+      setFormData({ ...formData, gallery: [...formData.gallery, url] })
+    }
+  }
+
+  const handleRemoveGalleryImage = (index: number) => {
+    setFormData({ ...formData, gallery: formData.gallery.filter((_, i) => i !== index) })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -214,29 +225,32 @@ export default function EditProductPage() {
               <h2 className="font-bold text-dark mb-4">اطلاعات اصلی</h2>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    عنوان محصول (فارسی) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    value={formData.titleFa}
-                    onChange={(e) => setFormData({ ...formData, titleFa: e.target.value })}
-                  />
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      عنوان محصول (فارسی) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.titleFa}
+                      onChange={(e) => setFormData({ ...formData, titleFa: e.target.value })}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    عنوان محصول (انگلیسی)
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    value={formData.titleEn || ''}
-                    onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      عنوان محصول (انگلیسی)
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.titleEn || ''}
+                      onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
+                      dir="ltr"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -278,36 +292,44 @@ export default function EditProductPage() {
               </div>
             </div>
 
-            {/* Image */}
+            {/* Main Image */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="font-bold text-dark mb-4">تصویر محصول</h2>
+              <h2 className="font-bold text-dark mb-4">تصویر اصلی</h2>
+              <ImageUpload
+                value={formData.image || null}
+                onChange={(url) => setFormData({ ...formData, image: url || '' })}
+                folder="products"
+                label="تصویر اصلی محصول"
+              />
+            </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    آدرس تصویر اصلی
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    value={formData.image || ''}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    dir="ltr"
-                    placeholder="/uploads/..."
-                  />
-                </div>
-
-                {formData.image && (
-                  <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
-                    <Image
-                      src={formData.image}
-                      alt="Product"
-                      fill
-                      className="object-contain"
+            {/* Gallery */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">گالری تصاویر</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                {formData.gallery.map((img, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={img}
+                      alt={`تصویر ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg"
                     />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveGalleryImage(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
-                )}
+                ))}
               </div>
+              <ImageUpload
+                value={null}
+                onChange={handleAddGalleryImage}
+                folder="products"
+                label="افزودن تصویر به گالری"
+              />
             </div>
 
             {/* Attributes */}
@@ -352,6 +374,35 @@ export default function EditProductPage() {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* SEO */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">سئو</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    عنوان متا
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.metaTitle || ''}
+                    onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    توضیحات متا
+                  </label>
+                  <textarea
+                    rows={2}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.metaDesc || ''}
+                    onChange={(e) => setFormData({ ...formData, metaDesc: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -444,20 +495,13 @@ export default function EditProductPage() {
             {/* Catalog */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="font-bold text-dark mb-4">کاتالوگ</h2>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  آدرس فایل کاتالوگ
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  value={formData.catalogFile || ''}
-                  onChange={(e) => setFormData({ ...formData, catalogFile: e.target.value })}
-                  dir="ltr"
-                  placeholder="/uploads/catalogs/..."
-                />
-              </div>
+              <FileUpload
+                value={formData.catalogFile || null}
+                onChange={(url) => setFormData({ ...formData, catalogFile: url || '' })}
+                folder="products/catalogs"
+                label="فایل کاتالوگ"
+                accept=".pdf"
+              />
             </div>
           </div>
         </div>
