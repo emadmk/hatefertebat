@@ -1,0 +1,220 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowRight, Loader2, Save } from 'lucide-react'
+
+const iconOptions = [
+  'Camera', 'Radio', 'Shield', 'Headphones', 'Network',
+  'Volume2', 'Settings', 'Truck', 'Wrench', 'Cpu'
+]
+
+export default function NewServicePage() {
+  const router = useRouter()
+  const [saving, setSaving] = useState(false)
+  const [formData, setFormData] = useState({
+    titleFa: '',
+    titleEn: '',
+    slug: '',
+    shortDesc: '',
+    fullDesc: '',
+    icon: '',
+    image: '',
+    status: 'DRAFT',
+    order: 0,
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+
+    try {
+      const res = await fetch('/api/admin/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        alert('خدمت با موفقیت ایجاد شد')
+        router.push('/admin/services')
+      } else {
+        alert(data.message || 'خطا در ایجاد خدمت')
+      }
+    } catch (error) {
+      console.error('Error creating service:', error)
+      alert('خطا در ایجاد خدمت')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-4 mb-6">
+        <Link
+          href="/admin/services"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ArrowRight className="w-5 h-5" />
+        </Link>
+        <h1 className="text-2xl font-bold text-dark">افزودن خدمت جدید</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">اطلاعات اصلی</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    عنوان خدمت (فارسی) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.titleFa}
+                    onChange={(e) => setFormData({ ...formData, titleFa: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    عنوان خدمت (انگلیسی)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.titleEn}
+                    onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    اسلاگ (URL)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    dir="ltr"
+                    placeholder="خالی بگذارید برای تولید خودکار"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    توضیحات کوتاه
+                  </label>
+                  <textarea
+                    rows={2}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.shortDesc}
+                    onChange={(e) => setFormData({ ...formData, shortDesc: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    توضیحات کامل
+                  </label>
+                  <textarea
+                    rows={6}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.fullDesc}
+                    onChange={(e) => setFormData({ ...formData, fullDesc: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">انتشار</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    وضعیت
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option value="DRAFT">پیش‌نویس</option>
+                    <option value="PUBLISHED">منتشر شده</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ترتیب نمایش
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.order}
+                    onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {saving ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5" />
+                  )}
+                  ذخیره خدمت
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">آیکون</h2>
+
+              <select
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                value={formData.icon}
+                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+              >
+                <option value="">انتخاب آیکون</option>
+                {iconOptions.map((icon) => (
+                  <option key={icon} value={icon}>
+                    {icon}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">تصویر</h2>
+
+              <input
+                type="text"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                dir="ltr"
+                placeholder="/uploads/..."
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+}

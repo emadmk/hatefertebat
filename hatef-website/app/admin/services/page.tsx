@@ -6,7 +6,7 @@ import { Plus, Edit, Trash2, Eye, GripVertical, Loader2 } from 'lucide-react'
 
 interface Service {
   id: string
-  title: string
+  titleFa: string
   slug: string
   icon: string | null
   status: string
@@ -115,7 +115,7 @@ export default function ServicesAdminPage() {
                     </button>
                   </td>
                   <td className="px-6 py-4 font-medium text-dark">
-                    {service.title}
+                    {service.titleFa}
                   </td>
                   <td className="px-6 py-4 text-gray-500" dir="ltr">
                     {service.slug}
