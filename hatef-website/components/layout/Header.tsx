@@ -81,7 +81,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-3">
             <div className="relative w-14 h-14">
               <Image
-                src="/images/logo.png"
+                src="/images/hatef-logo.webp"
                 alt={siteConfig.name}
                 fill
                 className="object-contain"

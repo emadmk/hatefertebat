@@ -53,7 +53,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center gap-3 mb-6">
               <div className="relative w-16 h-16">
                 <Image
-                  src="/images/logo.png"
+                  src="/images/hatef-logo.webp"
                   alt={siteConfig.name}
                   fill
                   className="object-contain"

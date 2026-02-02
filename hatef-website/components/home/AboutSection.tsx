@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Award, Users, Building, Calendar, Shield } from 'lucide-react'
+import { ArrowLeft, Award, Users, Building, Calendar } from 'lucide-react'
 import { siteConfig } from '@/lib/seo'
 
 const stats = [
@@ -25,14 +26,13 @@ export default function AboutSection() {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Shield className="w-32 h-32 text-primary/20" />
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                <h3 className="text-2xl font-bold text-dark mb-2">کرمان هاتف ارتباط</h3>
-                <p className="text-gray-600">نمایندگی رسمی برندهای معتبر جهانی</p>
-              </div>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+              <Image
+                src="/images/about-us-img.webp"
+                alt="کرمان هاتف ارتباط"
+                fill
+                className="object-cover"
+              />
             </div>
 
             {/* Experience Badge */}

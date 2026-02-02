@@ -31,6 +31,15 @@ const colorMap: Record<string, string> = {
   'paging': 'from-orange-500 to-orange-600',
 }
 
+const imageMap: Record<string, string> = {
+  'cctv': '/images/cctv.webp',
+  'camera': '/images/cctv.webp',
+  'access-control': '/images/telecomunication.webp',
+  'wireless': '/images/Microwave.webp',
+  'paging': '/images/paging.webp',
+  'radio': '/images/radio.webp',
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -105,6 +114,7 @@ export default function CategoriesSection() {
           {categories.map((category, index) => {
             const Icon = iconMap[category.slug] || Folder
             const color = colorMap[category.slug] || ['from-gray-500 to-gray-600', 'from-blue-500 to-blue-600', 'from-green-500 to-green-600', 'from-purple-500 to-purple-600'][index % 4]
+            const categoryImage = category.image || imageMap[category.slug]
 
             return (
               <motion.div key={category.id} variants={itemVariants}>
@@ -113,19 +123,22 @@ export default function CategoriesSection() {
                   className="group block bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-80`} />
-                    {category.image ? (
+                  <div className="relative h-48 overflow-hidden bg-gray-100">
+                    {categoryImage ? (
                       <Image
-                        src={category.image}
+                        src={categoryImage}
                         alt={category.nameFa}
                         fill
-                        className="object-cover mix-blend-overlay"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                    ) : null}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Icon className="w-16 h-16 text-white opacity-50" />
-                    </div>
+                    ) : (
+                      <>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-80`} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Icon className="w-16 h-16 text-white opacity-50" />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Content */}
