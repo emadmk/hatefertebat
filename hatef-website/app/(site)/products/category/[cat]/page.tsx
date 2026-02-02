@@ -43,9 +43,10 @@ interface RawProduct {
 }
 
 async function getCategory(slug: string) {
-  // Database has URL-encoded slugs, so use slug as-is
+  // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+  const encodedSlug = encodeURIComponent(slug).toLowerCase()
   return prisma.category.findUnique({
-    where: { slug },
+    where: { slug: encodedSlug },
   })
 }
 
@@ -67,11 +68,12 @@ async function getCategories() {
 }
 
 async function getProductsByCategory(categorySlug: string, page: number = 1, limit: number = 12) {
-  // Database has URL-encoded slugs, so use slug as-is
+  // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+  const encodedSlug = encodeURIComponent(categorySlug).toLowerCase()
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where: {
-        category: { slug: categorySlug },
+        category: { slug: encodedSlug },
         status: 'PUBLISHED',
       },
       include: {
@@ -84,7 +86,7 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
     }),
     prisma.product.count({
       where: {
-        category: { slug: categorySlug },
+        category: { slug: encodedSlug },
         status: 'PUBLISHED',
       },
     }),

@@ -9,10 +9,11 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    // Database has URL-encoded slugs, so use slug as-is
+    // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+    const encodedSlug = encodeURIComponent(slug).toLowerCase()
 
     const service = await prisma.service.findUnique({
-      where: { slug },
+      where: { slug: encodedSlug },
     })
 
     if (!service || service.status !== 'PUBLISHED') {

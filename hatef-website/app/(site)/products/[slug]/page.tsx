@@ -40,9 +40,10 @@ interface RawProduct {
 }
 
 async function getProduct(slug: string) {
-  // Database has URL-encoded slugs, so use slug as-is
+  // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+  const encodedSlug = encodeURIComponent(slug).toLowerCase()
   const product = await prisma.product.findUnique({
-    where: { slug },
+    where: { slug: encodedSlug },
     include: {
       category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true } },

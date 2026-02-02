@@ -14,9 +14,10 @@ interface PageProps {
 }
 
 async function getPost(slug: string) {
-  // Database has URL-encoded slugs, so use slug as-is
+  // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+  const encodedSlug = encodeURIComponent(slug).toLowerCase()
   return prisma.post.findUnique({
-    where: { slug },
+    where: { slug: encodedSlug },
     include: {
       postCategory: {
         select: { nameFa: true, slug: true }

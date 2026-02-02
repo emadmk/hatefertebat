@@ -9,13 +9,14 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    // Database has URL-encoded slugs, so use slug as-is
+    // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+    const encodedSlug = encodeURIComponent(slug).toLowerCase()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = parseInt(searchParams.get('limit') || '12', 10)
 
     const brand = await prisma.brand.findUnique({
-      where: { slug },
+      where: { slug: encodedSlug },
     })
 
     if (!brand) {

@@ -35,9 +35,10 @@ interface PageProps {
 }
 
 async function getBrand(slug: string) {
-  // Database has URL-encoded slugs, so use slug as-is
+  // Database has URL-encoded slugs, Next.js auto-decodes params, so re-encode
+  const encodedSlug = encodeURIComponent(slug).toLowerCase()
   return prisma.brand.findUnique({
-    where: { slug },
+    where: { slug: encodedSlug },
   })
 }
 
