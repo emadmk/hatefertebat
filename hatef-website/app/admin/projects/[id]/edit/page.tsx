@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Save, X } from 'lucide-react'
 import ImageUpload from '../../../components/ImageUpload'
 import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
 
-export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function EditProjectPage() {
+  const params = useParams()
+  const id = params.id as string
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
