@@ -13,9 +13,9 @@ interface PageProps {
 }
 
 async function getProject(slug: string) {
-  const decodedSlug = decodeURIComponent(slug)
+  // Database has URL-encoded slugs, so use slug as-is
   return prisma.project.findUnique({
-    where: { slug: decodedSlug },
+    where: { slug },
   })
 }
 

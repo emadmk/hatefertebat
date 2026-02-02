@@ -33,9 +33,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 }
 
 async function getService(slug: string) {
-  const decodedSlug = decodeURIComponent(slug)
+  // Database has URL-encoded slugs, so use slug as-is
   return prisma.service.findUnique({
-    where: { slug: decodedSlug },
+    where: { slug },
   })
 }
 

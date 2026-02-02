@@ -9,10 +9,10 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
-    const decodedSlug = decodeURIComponent(slug)
+    // Database has URL-encoded slugs, so use slug as-is
 
     const project = await prisma.project.findUnique({
-      where: { slug: decodedSlug },
+      where: { slug },
     })
 
     if (!project || project.status !== 'PUBLISHED') {

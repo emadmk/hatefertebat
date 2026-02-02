@@ -43,9 +43,9 @@ interface RawProduct {
 }
 
 async function getCategory(slug: string) {
-  const decodedSlug = decodeURIComponent(slug)
+  // Database has URL-encoded slugs, so use slug as-is
   return prisma.category.findUnique({
-    where: { slug: decodedSlug },
+    where: { slug },
   })
 }
 
@@ -67,11 +67,11 @@ async function getCategories() {
 }
 
 async function getProductsByCategory(categorySlug: string, page: number = 1, limit: number = 12) {
-  const decodedSlug = decodeURIComponent(categorySlug)
+  // Database has URL-encoded slugs, so use slug as-is
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where: {
-        category: { slug: decodedSlug },
+        category: { slug: categorySlug },
         status: 'PUBLISHED',
       },
       include: {
@@ -84,7 +84,7 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
     }),
     prisma.product.count({
       where: {
-        category: { slug: decodedSlug },
+        category: { slug: categorySlug },
         status: 'PUBLISHED',
       },
     }),

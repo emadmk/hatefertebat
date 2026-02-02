@@ -14,9 +14,9 @@ interface PageProps {
 }
 
 async function getPost(slug: string) {
-  const decodedSlug = decodeURIComponent(slug)
+  // Database has URL-encoded slugs, so use slug as-is
   return prisma.post.findUnique({
-    where: { slug: decodedSlug },
+    where: { slug },
     include: {
       postCategory: {
         select: { nameFa: true, slug: true }
