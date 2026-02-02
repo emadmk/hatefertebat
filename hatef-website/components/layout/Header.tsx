@@ -38,7 +38,7 @@ const navigation = [
     ],
   },
   { name: 'خدمات', href: '/services' },
-  { name: 'کاتالوگ', href: '/catalog' },
+  { name: 'کاتالوگ', href: 'https://hatef.ctdg.ir/', external: true },
   { name: 'وبلاگ', href: '/blog' },
   { name: 'تماس با ما', href: '/contact' },
   { name: 'درباره ما', href: '/about' },
@@ -103,20 +103,31 @@ export default function Header() {
                 onMouseEnter={() => item.children && setOpenDropdown(item.name)}
                 onMouseLeave={() => setOpenDropdown(null)}
               >
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1',
-                    pathname === item.href || pathname.startsWith(item.href + '/')
-                      ? 'text-primary'
-                      : 'text-gray-600 hover:text-primary'
-                  )}
-                >
-                  {item.name}
-                  {item.children && (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
-                </Link>
+                {item.external ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 text-gray-600 hover:text-primary"
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1',
+                      pathname === item.href || pathname.startsWith(item.href + '/')
+                        ? 'text-primary'
+                        : 'text-gray-600 hover:text-primary'
+                    )}
+                  >
+                    {item.name}
+                    {item.children && (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </Link>
+                )}
 
                 {/* Dropdown */}
                 {item.children && openDropdown === item.name && (
@@ -169,17 +180,28 @@ export default function Header() {
           <nav className="container mx-auto px-4 py-4 space-y-1">
             {navigation.map((item) => (
               <div key={item.name}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'block px-4 py-2.5 rounded-lg font-medium transition-colors',
-                    pathname === item.href
-                      ? 'bg-orange-50 text-primary'
-                      : 'text-dark hover:bg-gray-50'
-                  )}
-                >
-                  {item.name}
-                </Link>
+                {item.external ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2.5 rounded-lg font-medium transition-colors text-dark hover:bg-gray-50"
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'block px-4 py-2.5 rounded-lg font-medium transition-colors',
+                      pathname === item.href
+                        ? 'bg-orange-50 text-primary'
+                        : 'text-dark hover:bg-gray-50'
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                )}
                 {item.children && (
                   <div className="mr-4 mt-1 space-y-1 border-r-2 border-orange-200 pr-2">
                     {item.children.map((child) => (
