@@ -558,6 +558,7 @@ export default function SeoAnalyzer({
     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
       {/* Header */}
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-white hover:from-orange-100 transition-colors"
       >
@@ -599,6 +600,7 @@ export default function SeoAnalyzer({
           {/* Tabs */}
           <div className="flex border-b">
             <button
+              type="button"
               onClick={() => setActiveTab('seo')}
               className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                 activeTab === 'seo'
@@ -610,6 +612,7 @@ export default function SeoAnalyzer({
               سئو
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('readability')}
               className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                 activeTab === 'readability'
@@ -621,6 +624,7 @@ export default function SeoAnalyzer({
               خوانایی
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('preview')}
               className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                 activeTab === 'preview'
