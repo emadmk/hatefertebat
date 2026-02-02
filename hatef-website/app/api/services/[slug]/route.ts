@@ -9,9 +9,10 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
+    const decodedSlug = decodeURIComponent(slug)
 
     const service = await prisma.service.findUnique({
-      where: { slug },
+      where: { slug: decodedSlug },
     })
 
     if (!service || service.status !== 'PUBLISHED') {

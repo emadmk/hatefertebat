@@ -12,6 +12,11 @@ export async function GET(request: NextRequest) {
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
         where: { status: 'PUBLISHED' },
+        include: {
+          postCategory: {
+            select: { nameFa: true, slug: true }
+          }
+        },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,

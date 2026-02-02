@@ -9,12 +9,13 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
+    const decodedSlug = decodeURIComponent(slug)
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = parseInt(searchParams.get('limit') || '12', 10)
 
     const brand = await prisma.brand.findUnique({
-      where: { slug },
+      where: { slug: decodedSlug },
     })
 
     if (!brand) {

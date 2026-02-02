@@ -14,7 +14,7 @@ interface Post {
   excerpt: string | null
   image: string | null
   publishedAt: string
-  category: { nameFa: string; slug: string } | null
+  postCategory: { nameFa: string; slug: string } | null
 }
 
 const containerVariants = {
@@ -44,8 +44,8 @@ export default function LatestPosts() {
     fetch('/api/blog?limit=3')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.data) {
-          setPosts(data.data)
+        if (data.success && data.data?.posts) {
+          setPosts(data.data.posts)
         }
       })
       .catch(console.error)
@@ -136,10 +136,10 @@ export default function LatestPosts() {
                       <FileText className="w-12 h-12 text-gray-300" />
                     </div>
                   )}
-                  {post.category && (
+                  {post.postCategory && (
                     <div className="absolute top-4 right-4">
                       <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium text-dark">
-                        {post.category.nameFa}
+                        {post.postCategory.nameFa}
                       </span>
                     </div>
                   )}

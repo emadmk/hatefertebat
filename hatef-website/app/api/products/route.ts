@@ -34,15 +34,23 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
 
-    // Parse and validate query params
-    const query = querySchema.parse({
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      category: searchParams.get('category'),
-      brand: searchParams.get('brand'),
-      search: searchParams.get('search'),
-      sort: searchParams.get('sort'),
-    })
+    // Parse and validate query params - only include non-null values
+    const rawParams: Record<string, string> = {}
+    const page = searchParams.get('page')
+    const limit = searchParams.get('limit')
+    const category = searchParams.get('category')
+    const brand = searchParams.get('brand')
+    const search = searchParams.get('search')
+    const sort = searchParams.get('sort')
+
+    if (page) rawParams.page = page
+    if (limit) rawParams.limit = limit
+    if (category) rawParams.category = category
+    if (brand) rawParams.brand = brand
+    if (search) rawParams.search = search
+    if (sort) rawParams.sort = sort
+
+    const query = querySchema.parse(rawParams)
 
     // Build where clause
     const where: ProductWhereInput = {

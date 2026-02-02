@@ -9,9 +9,10 @@ export async function GET(
 ) {
   try {
     const { slug } = await params
+    const decodedSlug = decodeURIComponent(slug)
 
     const post = await prisma.post.findUnique({
-      where: { slug },
+      where: { slug: decodedSlug },
     })
 
     if (!post || post.status !== 'PUBLISHED') {

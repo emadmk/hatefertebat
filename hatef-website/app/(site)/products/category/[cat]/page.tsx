@@ -67,10 +67,11 @@ async function getCategories() {
 }
 
 async function getProductsByCategory(categorySlug: string, page: number = 1, limit: number = 12) {
+  const decodedSlug = decodeURIComponent(categorySlug)
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where: {
-        category: { slug: categorySlug },
+        category: { slug: decodedSlug },
         status: 'PUBLISHED',
       },
       include: {
@@ -83,7 +84,7 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
     }),
     prisma.product.count({
       where: {
-        category: { slug: categorySlug },
+        category: { slug: decodedSlug },
         status: 'PUBLISHED',
       },
     }),
