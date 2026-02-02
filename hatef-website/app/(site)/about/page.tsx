@@ -5,7 +5,14 @@ import { Breadcrumb } from '@/components/common'
 import { siteConfig } from '@/lib/seo'
 import prisma from '@/lib/db'
 
-async function getBrands() {
+interface Brand {
+  id: string
+  name: string
+  slug: string
+  logo: string | null
+}
+
+async function getBrands(): Promise<Brand[]> {
   try {
     const brands = await prisma.brand.findMany({
       where: { isActive: true },
