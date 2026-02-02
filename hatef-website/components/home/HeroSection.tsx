@@ -3,8 +3,30 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { Radio } from 'lucide-react'
+
+interface Brand {
+  id: string
+  name: string
+  slug: string
+  logo: string | null
+}
 
 export default function HeroSection() {
+  const [brands, setBrands] = useState<Brand[]>([])
+
+  useEffect(() => {
+    fetch('/api/brands')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setBrands(data.data.slice(0, 4))
+        }
+      })
+      .catch(console.error)
+  }, [])
+
   return (
     <section className="relative bg-gray-100 overflow-hidden min-h-[600px]">
       <div className="container mx-auto px-4 py-16 lg:py-24">
@@ -36,15 +58,9 @@ export default function HeroSection() {
             className="relative order-1 lg:order-2"
           >
             <div className="relative w-full max-w-md mx-auto lg:max-w-lg">
-              {/* Main Image */}
-              <div className="relative aspect-[3/4]">
-                <Image
-                  src="/images/hero-motorola.png"
-                  alt="Motorola Radio"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+              {/* Main Image Placeholder */}
+              <div className="relative aspect-[3/4] bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center">
+                <Radio className="w-32 h-32 text-primary/30" />
               </div>
 
               {/* Brand Label */}
@@ -61,46 +77,57 @@ export default function HeroSection() {
         <div className="container mx-auto px-4">
           <h3 className="text-center text-gray-500 text-sm mb-6">دسته بندی محصولات</h3>
           <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-16">
-            <Link href="/brands/industronic" className="group">
-              <div className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
-                <Image
-                  src="/images/brands/industronic.png"
-                  alt="Industronic"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </Link>
-            <Link href="/brands/cambium" className="group">
-              <div className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
-                <Image
-                  src="/images/brands/cambium.png"
-                  alt="Cambium Networks"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </Link>
-            <Link href="/brands/motorola" className="group">
-              <div className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
-                <Image
-                  src="/images/brands/motorola.png"
-                  alt="Motorola"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </Link>
-            <Link href="/brands/avigilon" className="group">
-              <div className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
-                <Image
-                  src="/images/brands/avigilon.png"
-                  alt="Avigilon"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </Link>
+            {brands.length > 0 ? (
+              brands.map((brand) => (
+                <Link key={brand.id} href={`/brands/${brand.slug}`} className="group">
+                  <div className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100 flex items-center justify-center">
+                    {brand.logo ? (
+                      <Image
+                        src={brand.logo}
+                        alt={brand.name}
+                        fill
+                        className="object-contain"
+                      />
+                    ) : (
+                      <span className="text-lg font-medium text-gray-600 group-hover:text-primary transition-colors">
+                        {brand.name}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <>
+                <Link href="/brands/motorola" className="group">
+                  <div className="relative w-32 h-20 flex items-center justify-center grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                    <span className="text-lg font-medium text-gray-600 group-hover:text-primary transition-colors">
+                      Motorola
+                    </span>
+                  </div>
+                </Link>
+                <Link href="/brands/avigilon" className="group">
+                  <div className="relative w-32 h-20 flex items-center justify-center grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                    <span className="text-lg font-medium text-gray-600 group-hover:text-primary transition-colors">
+                      Avigilon
+                    </span>
+                  </div>
+                </Link>
+                <Link href="/brands/cambium" className="group">
+                  <div className="relative w-32 h-20 flex items-center justify-center grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                    <span className="text-lg font-medium text-gray-600 group-hover:text-primary transition-colors">
+                      Cambium
+                    </span>
+                  </div>
+                </Link>
+                <Link href="/brands/industronic" className="group">
+                  <div className="relative w-32 h-20 flex items-center justify-center grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                    <span className="text-lg font-medium text-gray-600 group-hover:text-primary transition-colors">
+                      Industronic
+                    </span>
+                  </div>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

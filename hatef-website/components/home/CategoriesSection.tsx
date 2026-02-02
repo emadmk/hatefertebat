@@ -3,50 +3,33 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Camera, Radio, Shield, Speaker } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, Camera, Radio, Shield, Speaker, Folder } from 'lucide-react'
 
-const categories = [
-  {
-    id: 1,
-    name: 'دوربین مداربسته',
-    nameEn: 'CCTV',
-    slug: 'cctv',
-    description: 'دوربین‌های امنیتی با کیفیت بالا و قابلیت‌های هوشمند',
-    icon: Camera,
-    image: '/images/categories/cctv.jpg',
-    color: 'from-blue-500 to-blue-600',
-  },
-  {
-    id: 2,
-    name: 'کنترل دسترسی',
-    nameEn: 'Access Control',
-    slug: 'access-control',
-    description: 'سیستم‌های کنترل تردد و احراز هویت پیشرفته',
-    icon: Shield,
-    image: '/images/categories/access-control.jpg',
-    color: 'from-green-500 to-green-600',
-  },
-  {
-    id: 3,
-    name: 'بی‌سیم و مخابراتی',
-    nameEn: 'Wireless',
-    slug: 'wireless',
-    description: 'تجهیزات بی‌سیم و شبکه‌های مخابراتی',
-    icon: Radio,
-    image: '/images/categories/wireless.jpg',
-    color: 'from-purple-500 to-purple-600',
-  },
-  {
-    id: 4,
-    name: 'سیستم پیجینگ',
-    nameEn: 'Paging',
-    slug: 'paging',
-    description: 'سیستم‌های صوتی و پیجینگ صنعتی',
-    icon: Speaker,
-    image: '/images/categories/paging.jpg',
-    color: 'from-orange-500 to-orange-600',
-  },
-]
+interface Category {
+  id: string
+  nameFa: string
+  nameEn: string | null
+  slug: string
+  description: string | null
+  image: string | null
+}
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  'cctv': Camera,
+  'camera': Camera,
+  'access-control': Shield,
+  'wireless': Radio,
+  'paging': Speaker,
+}
+
+const colorMap: Record<string, string> = {
+  'cctv': 'from-blue-500 to-blue-600',
+  'camera': 'from-blue-500 to-blue-600',
+  'access-control': 'from-green-500 to-green-600',
+  'wireless': 'from-purple-500 to-purple-600',
+  'paging': 'from-orange-500 to-orange-600',
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -68,6 +51,25 @@ const itemVariants = {
 }
 
 export default function CategoriesSection() {
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          // Take only parent categories (first level)
+          const parentCategories = data.data.filter((c: Category & { parentId?: string | null }) => !c.parentId)
+          setCategories(parentCategories.slice(0, 4))
+        }
+      })
+      .catch(console.error)
+  }, [])
+
+  if (categories.length === 0) {
+    return null
+  }
+
   return (
     <section className="section bg-gray-50">
       <div className="container mx-auto px-4">
@@ -100,8 +102,10 @@ export default function CategoriesSection() {
           viewport={{ once: true }}
           className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          {categories.map((category) => {
-            const Icon = category.icon
+          {categories.map((category, index) => {
+            const Icon = iconMap[category.slug] || Folder
+            const color = colorMap[category.slug] || ['from-gray-500 to-gray-600', 'from-blue-500 to-blue-600', 'from-green-500 to-green-600', 'from-purple-500 to-purple-600'][index % 4]
+
             return (
               <motion.div key={category.id} variants={itemVariants}>
                 <Link
@@ -110,13 +114,15 @@ export default function CategoriesSection() {
                 >
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-80`} />
-                    <Image
-                      src={category.image}
-                      alt={category.name}
-                      fill
-                      className="object-cover mix-blend-overlay"
-                    />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-80`} />
+                    {category.image ? (
+                      <Image
+                        src={category.image}
+                        alt={category.nameFa}
+                        fill
+                        className="object-cover mix-blend-overlay"
+                      />
+                    ) : null}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Icon className="w-16 h-16 text-white opacity-50" />
                     </div>
@@ -127,15 +133,19 @@ export default function CategoriesSection() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="text-lg font-bold text-dark group-hover:text-primary transition-colors">
-                          {category.name}
+                          {category.nameFa}
                         </h3>
-                        <p className="text-sm text-gray-400">{category.nameEn}</p>
+                        {category.nameEn && (
+                          <p className="text-sm text-gray-400">{category.nameEn}</p>
+                        )}
                       </div>
                       <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-primary group-hover:-translate-x-1 transition-all" />
                     </div>
-                    <p className="text-gray-600 text-sm line-clamp-2">
-                      {category.description}
-                    </p>
+                    {category.description && (
+                      <p className="text-gray-600 text-sm line-clamp-2">
+                        {category.description}
+                      </p>
+                    )}
                   </div>
                 </Link>
               </motion.div>

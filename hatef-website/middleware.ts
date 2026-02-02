@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
 // Rate limiting store (in production, use Redis)
 const rateLimit = new Map<string, { count: number; timestamp: number }>()
@@ -44,7 +45,7 @@ setInterval(() => {
   })
 }, RATE_LIMIT_WINDOW)
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Security headers
@@ -109,13 +110,27 @@ export function middleware(request: NextRequest) {
     return new NextResponse('Bad Request', { status: 400 })
   }
 
-  // Admin route protection
-  if (pathname.startsWith('/admin')) {
-    // In production, check for authentication
-    // const session = await getSession(request)
-    // if (!session) {
-    //   return NextResponse.redirect(new URL('/login', request.url))
-    // }
+  // Admin route protection - check for authentication
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+
+    if (!token) {
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // Admin API protection
+  if (pathname.startsWith('/api/admin') && !pathname.includes('/auth/')) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+
+    if (!token) {
+      return new NextResponse(
+        JSON.stringify({ success: false, message: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
   }
 
   return response

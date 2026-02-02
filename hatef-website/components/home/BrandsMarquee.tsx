@@ -2,15 +2,33 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-const brands = [
-  { name: 'Motorola', slug: 'motorola', logo: '/images/brands/motorola.png' },
-  { name: 'Avigilon', slug: 'avigilon', logo: '/images/brands/avigilon.png' },
-  { name: 'Cambium Networks', slug: 'cambium', logo: '/images/brands/cambium.png' },
-  { name: 'Industronic', slug: 'industronic', logo: '/images/brands/industronic.png' },
-]
+interface Brand {
+  id: string
+  name: string
+  slug: string
+  logo: string | null
+}
 
 export default function BrandsMarquee() {
+  const [brands, setBrands] = useState<Brand[]>([])
+
+  useEffect(() => {
+    fetch('/api/brands')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setBrands(data.data)
+        }
+      })
+      .catch(console.error)
+  }, [])
+
+  if (brands.length === 0) {
+    return null
+  }
+
   // Duplicate brands for seamless loop
   const duplicatedBrands = [...brands, ...brands, ...brands]
 
@@ -33,12 +51,18 @@ export default function BrandsMarquee() {
               className="flex-shrink-0 mx-8 lg:mx-16 grayscale hover:grayscale-0 opacity-60 hover:opacity-100 transition-all duration-300"
             >
               <div className="relative w-32 h-16">
-                <Image
-                  src={brand.logo}
-                  alt={brand.name}
-                  fill
-                  className="object-contain"
-                />
+                {brand.logo ? (
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name}
+                    fill
+                    className="object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
+                    <span className="text-sm font-medium text-gray-600">{brand.name}</span>
+                  </div>
+                )}
               </div>
             </Link>
           ))}

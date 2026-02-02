@@ -3,39 +3,19 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Calendar } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { useEffect, useState } from 'react'
 
-// Demo posts - در نسخه نهایی از دیتابیس می‌آید
-const posts = [
-  {
-    id: '1',
-    titleFa: 'مقایسه دوربین‌های IP و آنالوگ: کدام بهتر است؟',
-    slug: 'ip-vs-analog-cameras',
-    excerpt: 'در این مقاله به بررسی تفاوت‌های اصلی بین دوربین‌های IP و آنالوگ می‌پردازیم و راهنمایی می‌کنیم که کدام نوع برای نیاز شما مناسب‌تر است.',
-    image: '/images/blog/ip-vs-analog.jpg',
-    publishedAt: new Date('2024-01-15'),
-    category: { nameFa: 'دوربین مداربسته', slug: 'cctv' },
-  },
-  {
-    id: '2',
-    titleFa: 'راهنمای انتخاب سیستم کنترل دسترسی مناسب',
-    slug: 'access-control-guide',
-    excerpt: 'انتخاب سیستم کنترل دسترسی مناسب برای سازمان شما می‌تواند چالش‌برانگیز باشد. در این مقاله نکات کلیدی را بررسی می‌کنیم.',
-    image: '/images/blog/access-control-guide.jpg',
-    publishedAt: new Date('2024-01-10'),
-    category: { nameFa: 'کنترل دسترسی', slug: 'access-control' },
-  },
-  {
-    id: '3',
-    titleFa: 'مزایای استفاده از بی‌سیم‌های دیجیتال موتورولا',
-    slug: 'motorola-digital-radios',
-    excerpt: 'بی‌سیم‌های دیجیتال موتورولا چه مزایایی نسبت به مدل‌های آنالوگ دارند؟ در این مقاله به بررسی ویژگی‌های کلیدی می‌پردازیم.',
-    image: '/images/blog/motorola-radios.jpg',
-    publishedAt: new Date('2024-01-05'),
-    category: { nameFa: 'بی‌سیم', slug: 'wireless' },
-  },
-]
+interface Post {
+  id: string
+  titleFa: string
+  slug: string
+  excerpt: string | null
+  image: string | null
+  publishedAt: string
+  category: { nameFa: string; slug: string } | null
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,6 +37,37 @@ const itemVariants = {
 }
 
 export default function LatestPosts() {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/blog?limit=3')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setPosts(data.data)
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="section bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center min-h-[300px]">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (posts.length === 0) {
+    return null
+  }
+
   return (
     <section className="section bg-gray-50">
       <div className="container mx-auto px-4">
@@ -112,26 +123,34 @@ export default function LatestPosts() {
                 className="group block bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300"
               >
                 {/* Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <Image
-                    src={post.image}
-                    alt={post.titleFa}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium text-dark">
-                      {post.category.nameFa}
-                    </span>
-                  </div>
+                <div className="relative h-48 overflow-hidden bg-gray-100">
+                  {post.image ? (
+                    <Image
+                      src={post.image}
+                      alt={post.titleFa}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className="w-12 h-12 text-gray-300" />
+                    </div>
+                  )}
+                  {post.category && (
+                    <div className="absolute top-4 right-4">
+                      <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-medium text-dark">
+                        {post.category.nameFa}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
                 <div className="p-6">
                   <div className="flex items-center gap-2 text-gray-500 text-sm mb-3">
                     <Calendar className="w-4 h-4" />
-                    <time dateTime={post.publishedAt.toISOString()}>
-                      {formatDate(post.publishedAt)}
+                    <time dateTime={post.publishedAt}>
+                      {formatDate(new Date(post.publishedAt))}
                     </time>
                   </div>
 
@@ -139,9 +158,11 @@ export default function LatestPosts() {
                     {post.titleFa}
                   </h3>
 
-                  <p className="text-gray-600 text-sm line-clamp-2">
-                    {post.excerpt}
-                  </p>
+                  {post.excerpt && (
+                    <p className="text-gray-600 text-sm line-clamp-2">
+                      {post.excerpt}
+                    </p>
+                  )}
 
                   <span className="inline-flex items-center gap-1 text-primary text-sm font-medium mt-4 group-hover:gap-2 transition-all">
                     ادامه مطلب
