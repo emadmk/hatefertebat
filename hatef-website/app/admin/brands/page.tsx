@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react'
 import Image from 'next/image'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
+import ImageUpload from './components/ImageUpload'
 
 interface Brand {
   id: string
@@ -23,6 +24,7 @@ export default function BrandsPage() {
   // Form state
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
+  const [logo, setLogo] = useState<string | null>(null)
 
   const fetchBrands = useCallback(async () => {
     try {
@@ -46,6 +48,7 @@ export default function BrandsPage() {
     setEditingBrand(null)
     setName('')
     setSlug('')
+    setLogo(null)
     setShowModal(true)
   }
 
@@ -53,6 +56,7 @@ export default function BrandsPage() {
     setEditingBrand(brand)
     setName(brand.name)
     setSlug(brand.slug)
+    setLogo(brand.logo)
     setShowModal(true)
   }
 
@@ -62,7 +66,7 @@ export default function BrandsPage() {
 
     setSaving(true)
     try {
-      const body = { name, slug: slug || undefined }
+      const body = { name, slug: slug || undefined, logo: logo || null }
       const url = editingBrand
         ? `/api/admin/brands/${editingBrand.id}`
         : '/api/admin/brands'
@@ -228,6 +232,15 @@ export default function BrandsPage() {
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="motorola"
                   dir="ltr"
+                />
+              </div>
+
+              <div>
+                <ImageUpload
+                  value={logo}
+                  onChange={(url) => setLogo(url)}
+                  folder="brands"
+                  label="لوگو برند"
                 />
               </div>
 
