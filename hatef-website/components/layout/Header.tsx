@@ -9,34 +9,74 @@ import {
   X,
   Phone,
   ChevronDown,
+  ChevronLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { siteConfig } from '@/lib/seo'
 import { trackPhoneClick } from '@/lib/analytics'
 
+// Product categories with hierarchy based on WordPress menu
+const productCategories = [
+  {
+    name: 'CCTV',
+    slug: 'cctv',
+    children: [
+      { name: 'Access Control', slug: 'access-control' },
+      { name: 'Security Cameras', slug: 'security-cameras' },
+    ],
+  },
+  {
+    name: 'Microwave',
+    slug: 'microwave',
+    children: [
+      { name: 'Hardware Products', slug: 'hardware-products' },
+      { name: 'Software Products', slug: 'software-products' },
+    ],
+  },
+  {
+    name: 'Paging',
+    slug: 'paging',
+    children: [
+      { name: 'Explosion-Proof', slug: 'explosion-proof' },
+      { name: 'Indoor', slug: 'indoor' },
+      { name: 'Outdoor', slug: 'outdoor' },
+    ],
+  },
+  {
+    name: 'Radio',
+    slug: 'radio',
+    children: [
+      { name: 'DMR', slug: 'dmr' },
+      { name: 'MOTOTRBO', slug: 'mototrbo' },
+      { name: 'TETRA', slug: 'tetra' },
+      { name: 'Portable Radios', slug: 'portable-radios' },
+      { name: 'Mobile Radios', slug: 'mobile-radios' },
+      { name: 'Project 25 Radios', slug: 'project-25-radios' },
+    ],
+  },
+  {
+    name: 'Wireless',
+    slug: 'wireless',
+    children: [
+      { name: 'MESH', slug: 'mesh' },
+      { name: 'Point to Multipoint', slug: 'point-to-multipoint' },
+      { name: 'Point to Point', slug: 'point-to-point' },
+      { name: 'WLAN', slug: 'wlan' },
+    ],
+  },
+]
+
+const brands = [
+  { name: 'Avigilon', slug: 'avigilon' },
+  { name: 'Cambium Networks', slug: 'cambium-networks' },
+  { name: 'Motorola', slug: 'motorola' },
+  { name: 'Siae Microelettronica', slug: 'siae-microelettronica' },
+]
+
 const navigation = [
   { name: 'خانه', href: '/' },
-  {
-    name: 'محصولات',
-    href: '/products',
-    children: [
-      { name: 'همه محصولات', href: '/products' },
-      { name: 'دوربین مداربسته', href: '/products/category/cctv' },
-      { name: 'کنترل دسترسی', href: '/products/category/access-control' },
-      { name: 'بی‌سیم و مخابراتی', href: '/products/category/wireless' },
-      { name: 'پیجینگ', href: '/products/category/paging' },
-    ],
-  },
-  {
-    name: 'برندها',
-    href: '/brands',
-    children: [
-      { name: 'Motorola', href: '/brands/motorola' },
-      { name: 'Avigilon', href: '/brands/avigilon' },
-      { name: 'Cambium Networks', href: '/brands/cambium' },
-      { name: 'Industronic', href: '/brands/industronic' },
-    ],
-  },
+  { name: 'محصولات', href: '/products', hasMegaMenu: 'products' },
+  { name: 'برندها', href: '/brands', hasMegaMenu: 'brands' },
   { name: 'خدمات', href: '/services' },
   { name: 'کاتالوگ', href: 'https://hatef.ctdg.ir/', external: true },
   { name: 'وبلاگ', href: '/blog' },
@@ -115,8 +155,8 @@ export default function Header() {
               <div
                 key={item.name}
                 className="relative"
-                onMouseEnter={() => item.children && handleMouseEnter(item.name)}
-                onMouseLeave={() => item.children && handleMouseLeave()}
+                onMouseEnter={() => item.hasMegaMenu && handleMouseEnter(item.name)}
+                onMouseLeave={() => item.hasMegaMenu && handleMouseLeave()}
               >
                 {item.external ? (
                   <a
@@ -138,23 +178,69 @@ export default function Header() {
                     )}
                   >
                     {item.name}
-                    {item.children && (
+                    {item.hasMegaMenu && (
                       <ChevronDown className="w-3.5 h-3.5" />
                     )}
                   </Link>
                 )}
 
-                {/* Dropdown */}
-                {item.children && openDropdown === item.name && (
-                  <div className="absolute top-full right-0 pt-2 w-48">
+                {/* Products Mega Menu */}
+                {item.hasMegaMenu === 'products' && openDropdown === item.name && (
+                  <div className="absolute top-full right-0 pt-2">
+                    <div className="bg-white rounded-lg shadow-dropdown p-4 animate-slide-down border border-gray-100 min-w-[500px]">
+                      <Link
+                        href="/products"
+                        className="block px-3 py-2 mb-2 text-sm font-bold text-primary hover:bg-orange-50 rounded-lg transition-colors"
+                      >
+                        همه محصولات
+                      </Link>
+                      <div className="grid grid-cols-2 gap-4">
+                        {productCategories.map((category) => (
+                          <div key={category.slug} className="space-y-1">
+                            <Link
+                              href={`/products/category/${category.slug}`}
+                              className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-dark hover:text-primary transition-colors"
+                            >
+                              <ChevronLeft className="w-3 h-3" />
+                              {category.name}
+                            </Link>
+                            {category.children && (
+                              <div className="mr-4 space-y-0.5 border-r-2 border-orange-200 pr-2">
+                                {category.children.map((child) => (
+                                  <Link
+                                    key={child.slug}
+                                    href={`/products/category/${child.slug}`}
+                                    className="block px-3 py-1.5 text-xs text-gray-600 hover:text-primary transition-colors"
+                                  >
+                                    {child.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Brands Dropdown */}
+                {item.hasMegaMenu === 'brands' && openDropdown === item.name && (
+                  <div className="absolute top-full right-0 pt-2 w-56">
                     <div className="bg-white rounded-lg shadow-dropdown py-2 animate-slide-down border border-gray-100">
-                      {item.children.map((child) => (
+                      <Link
+                        href="/brands"
+                        className="block px-4 py-2.5 text-sm font-bold text-primary hover:bg-orange-50 transition-colors border-b border-gray-100 mb-1"
+                      >
+                        همه برندها
+                      </Link>
+                      {brands.map((brand) => (
                         <Link
-                          key={child.href}
-                          href={child.href}
+                          key={brand.slug}
+                          href={`/brands/${brand.slug}`}
                           className="block px-4 py-2.5 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 transition-colors"
                         >
-                          {child.name}
+                          {brand.name}
                         </Link>
                       ))}
                     </div>
@@ -193,7 +279,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden bg-white border-t mt-2 animate-slide-down">
+        <div className="lg:hidden bg-white border-t mt-2 animate-slide-down max-h-[80vh] overflow-y-auto">
           <nav className="container mx-auto px-4 py-4 space-y-1">
             {navigation.map((item) => (
               <div key={item.name}>
@@ -219,15 +305,46 @@ export default function Header() {
                     {item.name}
                   </Link>
                 )}
-                {item.children && (
+
+                {/* Mobile Products Menu */}
+                {item.hasMegaMenu === 'products' && (
+                  <div className="mr-4 mt-1 space-y-2 border-r-2 border-orange-200 pr-2">
+                    {productCategories.map((category) => (
+                      <div key={category.slug}>
+                        <Link
+                          href={`/products/category/${category.slug}`}
+                          className="block px-4 py-2 text-sm font-medium text-dark hover:text-primary transition-colors"
+                        >
+                          {category.name}
+                        </Link>
+                        {category.children && (
+                          <div className="mr-4 space-y-0.5 border-r border-gray-200 pr-2">
+                            {category.children.map((child) => (
+                              <Link
+                                key={child.slug}
+                                href={`/products/category/${child.slug}`}
+                                className="block px-3 py-1.5 text-xs text-gray-500 hover:text-primary transition-colors"
+                              >
+                                {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Mobile Brands Menu */}
+                {item.hasMegaMenu === 'brands' && (
                   <div className="mr-4 mt-1 space-y-1 border-r-2 border-orange-200 pr-2">
-                    {item.children.map((child) => (
+                    {brands.map((brand) => (
                       <Link
-                        key={child.href}
-                        href={child.href}
+                        key={brand.slug}
+                        href={`/brands/${brand.slug}`}
                         className="block px-4 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
                       >
-                        {child.name}
+                        {brand.name}
                       </Link>
                     ))}
                   </div>
