@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -49,6 +49,21 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const pathname = usePathname()
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleMouseEnter = (itemName: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current)
+      dropdownTimeoutRef.current = null
+    }
+    setOpenDropdown(itemName)
+  }
+
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null)
+    }, 150)
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -100,8 +115,8 @@ export default function Header() {
               <div
                 key={item.name}
                 className="relative"
-                onMouseEnter={() => item.children && setOpenDropdown(item.name)}
-                onMouseLeave={() => setOpenDropdown(null)}
+                onMouseEnter={() => item.children && handleMouseEnter(item.name)}
+                onMouseLeave={() => item.children && handleMouseLeave()}
               >
                 {item.external ? (
                   <a
@@ -131,16 +146,18 @@ export default function Header() {
 
                 {/* Dropdown */}
                 {item.children && openDropdown === item.name && (
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-dropdown py-2 animate-slide-down border border-gray-100">
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className="block px-4 py-2.5 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 transition-colors"
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
+                  <div className="absolute top-full right-0 pt-2 w-48">
+                    <div className="bg-white rounded-lg shadow-dropdown py-2 animate-slide-down border border-gray-100">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className="block px-4 py-2.5 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 transition-colors"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
