@@ -81,6 +81,7 @@ export default function ProductCard({
               alt={product.brand.name}
               fill
               className="object-contain object-right"
+              unoptimized
             />
           </div>
         )}

@@ -213,6 +213,7 @@ export default async function ProductPage({ params }: PageProps) {
                           alt={product.brand.name}
                           fill
                           className="object-contain"
+                          unoptimized
                         />
                       </div>
                     )}

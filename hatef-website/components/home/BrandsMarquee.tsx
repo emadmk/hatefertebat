@@ -57,6 +57,7 @@ export default function BrandsMarquee() {
                     alt={brand.name}
                     fill
                     className="object-contain"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">

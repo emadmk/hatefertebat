@@ -124,7 +124,7 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
         <div className="container mx-auto px-4 py-12 text-center">
           {brand.logo && (
             <div className="relative w-48 h-24 mx-auto mb-6">
-              <Image src={brand.logo} alt={brand.name} fill className="object-contain" />
+              <Image src={brand.logo} alt={brand.name} fill className="object-contain" unoptimized />
             </div>
           )}
           <h1 className="text-3xl font-bold text-dark mb-4">{brand.name}</h1>
