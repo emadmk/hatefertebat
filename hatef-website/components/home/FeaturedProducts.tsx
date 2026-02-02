@@ -14,7 +14,7 @@ interface Product {
   shortDesc: string | null
   image: string | null
   category: { nameFa: string; slug: string } | null
-  brand: { name: string; slug: string } | null
+  brand: { name: string; slug: string; logo?: string | null } | null
 }
 
 const containerVariants = {

@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
-          brand: { select: { id: true, name: true, slug: true } },
+          brand: { select: { id: true, name: true, slug: true, logo: true } },
         },
         orderBy,
         skip: (query.page - 1) * query.limit,

@@ -15,7 +15,7 @@ interface Product {
   shortDesc?: string | null
   image?: string | null
   category?: { nameFa: string; slug: string } | null
-  brand?: { name: string; slug: string } | null
+  brand?: { name: string; slug: string; logo?: string | null } | null
 }
 
 interface RawProduct {
@@ -26,7 +26,7 @@ interface RawProduct {
   shortDesc: string | null
   image: string | null
   category: { nameFa: string; slug: string } | null
-  brand: { name: string; slug: string } | null
+  brand: { name: string; slug: string; logo: string | null } | null
 }
 
 interface PageProps {
@@ -51,7 +51,7 @@ async function getProductsByBrand(brandId: string, page: number = 1, limit: numb
       },
       include: {
         category: { select: { nameFa: true, slug: true } },
-        brand: { select: { name: true, slug: true } },
+        brand: { select: { name: true, slug: true, logo: true } },
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,

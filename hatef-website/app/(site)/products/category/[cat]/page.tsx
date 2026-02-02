@@ -28,7 +28,7 @@ interface Product {
   shortDesc?: string | null
   image?: string | null
   category?: { nameFa: string; slug: string } | null
-  brand?: { name: string; slug: string } | null
+  brand?: { name: string; slug: string; logo?: string | null } | null
 }
 
 interface RawProduct {
@@ -39,7 +39,7 @@ interface RawProduct {
   shortDesc: string | null
   image: string | null
   category: { id: string; nameFa: string; nameEn: string | null; slug: string } | null
-  brand: { id: string; name: string; slug: string } | null
+  brand: { id: string; name: string; slug: string; logo: string | null } | null
 }
 
 async function getCategory(slug: string) {
@@ -78,7 +78,7 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
       },
       include: {
         category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
-        brand: { select: { id: true, name: true, slug: true } },
+        brand: { select: { id: true, name: true, slug: true, logo: true } },
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
@@ -100,7 +100,7 @@ async function getProductsByCategory(categorySlug: string, page: number = 1, lim
     shortDesc: p.shortDesc,
     image: p.image,
     category: p.category ? { nameFa: p.category.nameFa, slug: p.category.slug } : null,
-    brand: p.brand ? { name: p.brand.name, slug: p.brand.slug } : null,
+    brand: p.brand ? { name: p.brand.name, slug: p.brand.slug, logo: p.brand.logo } : null,
   }))
 
   return {

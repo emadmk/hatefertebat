@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Download, FileText } from 'lucide-react'
 import { Breadcrumb } from '@/components/common'
 import ProductCard from '@/components/products/ProductCard'
@@ -25,7 +26,7 @@ interface RelatedProduct {
   shortDesc?: string | null
   image?: string | null
   category?: { nameFa: string; slug: string } | null
-  brand?: { name: string; slug: string } | null
+  brand?: { name: string; slug: string; logo?: string | null } | null
 }
 
 interface RawProduct {
@@ -36,7 +37,7 @@ interface RawProduct {
   shortDesc: string | null
   image: string | null
   category: { nameFa: string; slug: string } | null
-  brand: { name: string; slug: string } | null
+  brand: { name: string; slug: string; logo: string | null } | null
 }
 
 async function getProduct(slug: string) {
@@ -46,7 +47,7 @@ async function getProduct(slug: string) {
     where: { slug: encodedSlug },
     include: {
       category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
-      brand: { select: { id: true, name: true, slug: true } },
+      brand: { select: { id: true, name: true, slug: true, logo: true } },
     },
   })
 
@@ -64,7 +65,7 @@ async function getRelatedProducts(categoryId: string | null, currentProductId: s
     },
     include: {
       category: { select: { nameFa: true, slug: true } },
-      brand: { select: { name: true, slug: true } },
+      brand: { select: { name: true, slug: true, logo: true } },
     },
     take: 3,
     orderBy: { createdAt: 'desc' },
@@ -197,6 +198,28 @@ export default async function ProductPage({ params }: PageProps) {
                   <p className="text-gray-400 mb-4" dir="ltr">
                     {product.titleEn}
                   </p>
+                )}
+
+                {/* Brand */}
+                {product.brand && (
+                  <Link
+                    href={`/brands/${product.brand.slug}`}
+                    className="inline-flex items-center gap-3 mb-4 p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    {product.brand.logo && (
+                      <div className="relative w-16 h-10 flex-shrink-0">
+                        <Image
+                          src={product.brand.logo}
+                          alt={product.brand.name}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+                    <span className="text-sm text-gray-600">
+                      برند: <span className="font-medium text-primary">{product.brand.name}</span>
+                    </span>
+                  </Link>
                 )}
 
                 {/* Short Description */}

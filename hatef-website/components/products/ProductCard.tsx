@@ -15,7 +15,7 @@ interface ProductCardProps {
     shortDesc?: string | null
     image?: string | null
     category?: { nameFa: string; slug: string } | null
-    brand?: { name: string; slug: string } | null
+    brand?: { name: string; slug: string; logo?: string | null } | null
   }
   showCompare?: boolean
   onCompareClick?: (id: string) => void
@@ -73,6 +73,18 @@ export default function ProductCard({
 
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col">
+        {/* Brand Logo */}
+        {product.brand?.logo && (
+          <div className="relative w-12 h-6 mb-2">
+            <Image
+              src={product.brand.logo}
+              alt={product.brand.name}
+              fill
+              className="object-contain object-right"
+            />
+          </div>
+        )}
+
         {/* Title */}
         <Link href={`/products/${product.slug}`}>
           <h3 className="text-dark font-bold text-base mb-2 group-hover:text-primary transition-colors line-clamp-2">
