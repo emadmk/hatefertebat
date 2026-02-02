@@ -18,11 +18,12 @@ const slides = [
   },
   {
     id: 2,
-    brandName: 'SIAE',
+    brandName: 'Cambium',
     image: '/images/02.webp',
-    title: 'تجربه ارتباطات با بالاترین سطح با برند',
-    titleBrand: 'SIAE',
-    description: 'SIAE، اطمینان بی‌نظیر را تجربه کنید. راهکارهای حفاظتی پیشرفته و سیستم‌های نوآورانه آن به شما امنیتی بی‌مانند ارائه می‌دهند.',
+    title: 'Cambium، لذت ببرید از ارتباطاتی که آینده را',
+    titleBrand: '',
+    titleSuffix: 'به‌وجود می‌آورند',
+    description: 'با برند Cambium، بهترین راهکارها برای ارتباطات بی‌نظیر را تجربه کنید. تکنولوژی پیشرفته و خدمات برتر این برند، به شما امکان ارتباطاتی بی‌همتا را می‌دهد.',
     productsLink: '/products',
     servicesLink: '/services',
   },
@@ -72,29 +73,29 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 py-8 lg:py-16 relative">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-4 items-center min-h-[500px] lg:min-h-[600px]">
 
-          {/* Brand Name - Vertical on left side */}
-          <div className="hidden lg:block absolute left-8 top-1/2 -translate-y-1/2 z-10">
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={slide.brandName}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.5 }}
-                className="text-gray-300 text-6xl xl:text-7xl font-bold tracking-wider"
-                style={{
-                  writingMode: 'vertical-rl',
-                  textOrientation: 'mixed',
-                  transform: 'rotate(180deg)'
-                }}
-              >
-                {slide.brandName}
-              </motion.span>
-            </AnimatePresence>
-          </div>
+          {/* Image with Brand Name - Left Side */}
+          <div className="relative order-1 lg:order-1 flex justify-center items-center">
+            {/* Brand Name - Vertical on right side of image */}
+            <div className="hidden lg:flex absolute right-0 xl:right-8 top-1/2 -translate-y-1/2 z-10">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={slide.brandName}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-gray-300 text-5xl xl:text-6xl font-bold tracking-wider"
+                  style={{
+                    writingMode: 'vertical-rl',
+                    textOrientation: 'mixed',
+                  }}
+                >
+                  {slide.brandName}
+                </motion.span>
+              </AnimatePresence>
+            </div>
 
-          {/* Image - Left Side */}
-          <div className="relative order-1 lg:order-1 flex justify-center lg:justify-start lg:pr-16">
+            {/* Image */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={slide.id}
@@ -102,7 +103,7 @@ export default function HeroSection() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.5 }}
-                className="relative w-full max-w-sm lg:max-w-md xl:max-w-lg"
+                className="relative w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg pl-4 lg:pl-8"
               >
                 <div className="relative aspect-[3/4] w-full">
                   <Image
@@ -179,8 +180,14 @@ export default function HeroSection() {
       </div>
 
       {/* Mobile Brand Name */}
-      <div className="lg:hidden absolute bottom-24 left-4 z-10">
-        <span className="text-gray-200 text-4xl font-bold tracking-wider opacity-50">
+      <div className="lg:hidden absolute top-1/2 -translate-y-1/2 right-2 z-10">
+        <span
+          className="text-gray-200 text-3xl sm:text-4xl font-bold tracking-wider opacity-40"
+          style={{
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+          }}
+        >
           {slide.brandName}
         </span>
       </div>
