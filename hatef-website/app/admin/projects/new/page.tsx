@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Save, X } from 'lucide-react'
 import ImageUpload from '../../components/ImageUpload'
+import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
 
 export default function NewProjectPage() {
   const router = useRouter()
@@ -22,6 +23,9 @@ export default function NewProjectPage() {
     status: 'DRAFT',
     featured: false,
     order: 0,
+    metaTitle: '',
+    metaDesc: '',
+    focusKeyword: '',
   })
 
   const handleAddImage = (url: string | null) => {
@@ -227,6 +231,51 @@ export default function NewProjectPage() {
               />
               <span className="text-sm text-gray-700">پروژه ویژه</span>
             </label>
+          </div>
+
+          {/* SEO */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              عنوان متا
+              <span className={`mr-2 text-xs ${form.metaTitle.length > 60 ? 'text-red-500' : 'text-gray-400'}`}>
+                ({form.metaTitle.length}/60)
+              </span>
+            </label>
+            <input
+              type="text"
+              value={form.metaTitle}
+              onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              توضیحات متا
+              <span className={`mr-2 text-xs ${form.metaDesc.length > 160 ? 'text-red-500' : 'text-gray-400'}`}>
+                ({form.metaDesc.length}/160)
+              </span>
+            </label>
+            <textarea
+              rows={2}
+              value={form.metaDesc}
+              onChange={(e) => setForm({ ...form, metaDesc: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+
+          {/* SEO Analyzer */}
+          <div className="md:col-span-2">
+            <SeoAnalyzer
+              title={form.titleFa}
+              metaTitle={form.metaTitle}
+              metaDesc={form.metaDesc}
+              content={form.description}
+              slug={form.slug}
+              focusKeyword={form.focusKeyword}
+              onFocusKeywordChange={(keyword) => setForm({ ...form, focusKeyword: keyword })}
+              baseUrl="https://hatefertebat.ir/projects"
+            />
           </div>
         </div>
 

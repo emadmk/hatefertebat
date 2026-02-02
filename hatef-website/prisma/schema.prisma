@@ -78,6 +78,7 @@ model Product {
   featured        Boolean           @default(false)
   metaTitle       String?
   metaDesc        String?
+  focusKeyword    String?
   keywords        String[]
   categoryId      String?
   category        Category?         @relation(fields: [categoryId], references: [id])
@@ -151,20 +152,21 @@ model Brand {
 // ==================== Services ====================
 
 model Service {
-  id          String        @id @default(cuid())
-  titleFa     String
-  titleEn     String?
-  slug        String        @unique
-  shortDesc   String?       @db.Text
-  fullDesc    String?       @db.Text
-  icon        String?
-  image       String?
-  status      ContentStatus @default(DRAFT)
-  order       Int           @default(0)
-  metaTitle   String?
-  metaDesc    String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  titleFa         String
+  titleEn         String?
+  slug            String        @unique
+  shortDesc       String?       @db.Text
+  fullDesc        String?       @db.Text
+  icon            String?
+  image           String?
+  status          ContentStatus @default(DRAFT)
+  order           Int           @default(0)
+  metaTitle       String?
+  metaDesc        String?
+  focusKeyword    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([slug])
 }
@@ -172,24 +174,25 @@ model Service {
 // ==================== Blog ====================
 
 model Post {
-  id            String        @id @default(cuid())
-  titleFa       String
-  titleEn       String?
-  slug          String        @unique
-  excerpt       String?       @db.Text
-  content       String?       @db.Text
-  image         String?
-  status        ContentStatus @default(DRAFT)
-  publishedAt   DateTime?
-  author        String?
-  postCategoryId String?
-  postCategory  PostCategory? @relation(fields: [postCategoryId], references: [id])
-  tags          String[]
-  viewCount     Int           @default(0)
-  metaTitle     String?
-  metaDesc      String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  titleFa         String
+  titleEn         String?
+  slug            String        @unique
+  excerpt         String?       @db.Text
+  content         String?       @db.Text
+  image           String?
+  status          ContentStatus @default(DRAFT)
+  publishedAt     DateTime?
+  author          String?
+  postCategoryId  String?
+  postCategory    PostCategory? @relation(fields: [postCategoryId], references: [id])
+  tags            String[]
+  viewCount       Int           @default(0)
+  metaTitle       String?
+  metaDesc        String?
+  focusKeyword    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([postCategoryId])
   @@index([status])
@@ -211,20 +214,23 @@ model PostCategory {
 // ==================== Projects ====================
 
 model Project {
-  id          String        @id @default(cuid())
-  titleFa     String
-  titleEn     String?
-  slug        String        @unique
-  description String?       @db.Text
-  images      String[]
-  client      String?
-  location    String?
-  year        String?
-  status      ContentStatus @default(DRAFT)
-  featured    Boolean       @default(false)
-  order       Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  titleFa         String
+  titleEn         String?
+  slug            String        @unique
+  description     String?       @db.Text
+  images          String[]
+  client          String?
+  location        String?
+  year            String?
+  status          ContentStatus @default(DRAFT)
+  featured        Boolean       @default(false)
+  order           Int           @default(0)
+  metaTitle       String?
+  metaDesc        String?
+  focusKeyword    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([slug])
 }

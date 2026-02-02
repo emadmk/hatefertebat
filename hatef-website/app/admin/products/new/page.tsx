@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, Plus, X, Loader2, Save } from 'lucide-react'
 import ImageUpload from '../../components/ImageUpload'
 import FileUpload from '../../components/FileUpload'
+import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
 
 interface Category {
   id: string
@@ -38,6 +39,7 @@ export default function NewProductPage() {
     brandId: '',
     metaTitle: '',
     metaDesc: '',
+    focusKeyword: '',
   })
 
   const [attributes, setAttributes] = useState([{ key: '', value: '' }])
@@ -291,6 +293,9 @@ export default function NewProductPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     عنوان متا
+                    <span className={`mr-2 text-xs ${form.metaTitle.length > 60 ? 'text-red-500' : 'text-gray-400'}`}>
+                      ({form.metaTitle.length}/60)
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -302,9 +307,12 @@ export default function NewProductPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     توضیحات متا
+                    <span className={`mr-2 text-xs ${form.metaDesc.length > 160 ? 'text-red-500' : 'text-gray-400'}`}>
+                      ({form.metaDesc.length}/160)
+                    </span>
                   </label>
                   <textarea
-                    rows={2}
+                    rows={3}
                     value={form.metaDesc}
                     onChange={(e) => setForm({ ...form, metaDesc: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -312,6 +320,18 @@ export default function NewProductPage() {
                 </div>
               </div>
             </div>
+
+            {/* SEO Analyzer */}
+            <SeoAnalyzer
+              title={form.titleFa}
+              metaTitle={form.metaTitle}
+              metaDesc={form.metaDesc}
+              content={form.fullDesc}
+              slug={form.slug}
+              focusKeyword={form.focusKeyword}
+              onFocusKeywordChange={(keyword) => setForm({ ...form, focusKeyword: keyword })}
+              baseUrl="https://hatefertebat.ir/products"
+            />
           </div>
 
           {/* Sidebar */}

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, X, Plus, Loader2, Save } from 'lucide-react'
 import ImageUpload from '../../../components/ImageUpload'
 import FileUpload from '../../../components/FileUpload'
+import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
 
 interface Category {
   id: string
@@ -36,6 +37,7 @@ interface ProductData {
   attributes: { key: string; value: string }[]
   metaTitle: string | null
   metaDesc: string | null
+  focusKeyword: string
 }
 
 export default function EditProductPage() {
@@ -65,6 +67,7 @@ export default function EditProductPage() {
     attributes: [{ key: '', value: '' }],
     metaTitle: '',
     metaDesc: '',
+    focusKeyword: '',
   })
 
   const fetchProduct = useCallback(async () => {
@@ -93,6 +96,7 @@ export default function EditProductPage() {
             : [{ key: '', value: '' }],
           metaTitle: product.metaTitle || '',
           metaDesc: product.metaDesc || '',
+          focusKeyword: product.focusKeyword || '',
         })
       }
     } catch (error) {
@@ -147,6 +151,7 @@ export default function EditProductPage() {
           attributes: formData.attributes.filter(a => a.key && a.value),
           metaTitle: formData.metaTitle || null,
           metaDesc: formData.metaDesc || null,
+          focusKeyword: formData.focusKeyword || null,
         }),
       })
 
@@ -384,6 +389,9 @@ export default function EditProductPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     عنوان متا
+                    <span className={`mr-2 text-xs ${(formData.metaTitle?.length || 0) > 60 ? 'text-red-500' : 'text-gray-400'}`}>
+                      ({formData.metaTitle?.length || 0}/60)
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -395,9 +403,12 @@ export default function EditProductPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     توضیحات متا
+                    <span className={`mr-2 text-xs ${(formData.metaDesc?.length || 0) > 160 ? 'text-red-500' : 'text-gray-400'}`}>
+                      ({formData.metaDesc?.length || 0}/160)
+                    </span>
                   </label>
                   <textarea
-                    rows={2}
+                    rows={3}
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     value={formData.metaDesc || ''}
                     onChange={(e) => setFormData({ ...formData, metaDesc: e.target.value })}
@@ -405,6 +416,18 @@ export default function EditProductPage() {
                 </div>
               </div>
             </div>
+
+            {/* SEO Analyzer */}
+            <SeoAnalyzer
+              title={formData.titleFa}
+              metaTitle={formData.metaTitle || ''}
+              metaDesc={formData.metaDesc || ''}
+              content={formData.fullDesc || ''}
+              slug={formData.slug}
+              focusKeyword={formData.focusKeyword}
+              onFocusKeywordChange={(keyword) => setFormData({ ...formData, focusKeyword: keyword })}
+              baseUrl="https://hatefertebat.ir/products"
+            />
           </div>
 
           {/* Sidebar */}

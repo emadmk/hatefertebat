@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Save } from 'lucide-react'
 import ImageUpload from '../../components/ImageUpload'
+import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
 
 const iconOptions = [
   'Camera', 'Radio', 'Shield', 'Headphones', 'Network',
@@ -24,6 +25,9 @@ export default function NewServicePage() {
     image: '',
     status: 'DRAFT',
     order: 0,
+    metaTitle: '',
+    metaDesc: '',
+    focusKeyword: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,6 +214,53 @@ export default function NewServicePage() {
                 label="تصویر خدمت"
               />
             </div>
+
+            {/* SEO */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="font-bold text-dark mb-4">سئو</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    عنوان متا
+                    <span className={`mr-2 text-xs ${formData.metaTitle.length > 60 ? 'text-red-500' : 'text-gray-400'}`}>
+                      ({formData.metaTitle.length}/60)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.metaTitle}
+                    onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    توضیحات متا
+                    <span className={`mr-2 text-xs ${formData.metaDesc.length > 160 ? 'text-red-500' : 'text-gray-400'}`}>
+                      ({formData.metaDesc.length}/160)
+                    </span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    value={formData.metaDesc}
+                    onChange={(e) => setFormData({ ...formData, metaDesc: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SEO Analyzer */}
+            <SeoAnalyzer
+              title={formData.titleFa}
+              metaTitle={formData.metaTitle}
+              metaDesc={formData.metaDesc}
+              content={formData.fullDesc}
+              slug={formData.slug}
+              focusKeyword={formData.focusKeyword}
+              onFocusKeywordChange={(keyword) => setFormData({ ...formData, focusKeyword: keyword })}
+              baseUrl="https://hatefertebat.ir/services"
+            />
           </div>
         </div>
       </form>
