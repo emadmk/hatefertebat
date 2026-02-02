@@ -65,6 +65,14 @@ export const metadata: Metadata = {
   verification: {
     google: 'your-google-verification-code',
   },
+  icons: {
+    icon: [
+      { url: '/images/hatef-logo.webp', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/images/hatef-logo.webp' },
+    ],
+  },
 }
 
 export const viewport: Viewport = {
@@ -85,8 +93,6 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         {/* Vazirmatn Font from CDN */}
         <link

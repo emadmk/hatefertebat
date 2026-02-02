@@ -69,7 +69,7 @@ export default function CategoriesSection() {
         if (data.success && data.data) {
           // Take only parent categories (first level)
           const parentCategories = data.data.filter((c: Category & { parentId?: string | null }) => !c.parentId)
-          setCategories(parentCategories.slice(0, 4))
+          setCategories(parentCategories.slice(0, 5))
         }
       })
       .catch(console.error)
@@ -109,7 +109,7 @@ export default function CategoriesSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
         >
           {categories.map((category, index) => {
             const Icon = iconMap[category.slug] || Folder
