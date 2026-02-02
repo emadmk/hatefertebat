@@ -12,7 +12,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: { services },
+      data: services,
     })
   } catch (error) {
     console.error('Error fetching services:', error)
