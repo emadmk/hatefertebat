@@ -3,6 +3,25 @@ import Image from 'next/image'
 import { Award, Users, Building, Calendar } from 'lucide-react'
 import { Breadcrumb } from '@/components/common'
 import { siteConfig } from '@/lib/seo'
+import prisma from '@/lib/db'
+
+async function getBrands() {
+  try {
+    const brands = await prisma.brand.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logo: true,
+      },
+      orderBy: { name: 'asc' },
+    })
+    return brands
+  } catch {
+    return []
+  }
+}
 
 export const metadata: Metadata = {
   title: 'درباره ما',
@@ -16,7 +35,9 @@ const stats = [
   { icon: Award, label: 'برند معتبر', value: '4' },
 ]
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const brands = await getBrands()
+
   const breadcrumbItems = [
     { name: 'خانه', url: '/' },
     { name: 'درباره ما', url: '/about' },
@@ -96,21 +117,26 @@ export default function AboutPage() {
       </div>
 
       {/* Brands */}
-      <div className="container mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-dark text-center mb-8">برندهای نمایندگی</h2>
-        <div className="flex flex-wrap items-center justify-center gap-12">
-          {['motorola', 'avigilon', 'cambium', 'industronic'].map((brand) => (
-            <div key={brand} className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all">
-              <Image
-                src={`/images/brands/${brand}.png`}
-                alt={brand}
-                fill
-                className="object-contain"
-              />
-            </div>
-          ))}
+      {brands.length > 0 && (
+        <div className="container mx-auto px-4 py-12">
+          <h2 className="text-2xl font-bold text-dark text-center mb-8">برندهای نمایندگی</h2>
+          <div className="flex flex-wrap items-center justify-center gap-12">
+            {brands.map((brand) => (
+              brand.logo && (
+                <div key={brand.id} className="relative w-32 h-20 grayscale hover:grayscale-0 transition-all">
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name}
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              )
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
