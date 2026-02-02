@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react'
 import Image from 'next/image'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
-import ImageUpload from './components/ImageUpload'
+import ImageUpload from '../components/ImageUpload'
 
 interface Brand {
   id: string
