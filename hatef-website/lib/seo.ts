@@ -227,3 +227,57 @@ export function generateArticleSchema(article: {
     },
   }
 }
+
+export function generateWebSiteSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteConfig.name,
+    alternateName: siteConfig.nameEn,
+    url: siteConfig.url,
+    description: siteConfig.description,
+    inLanguage: 'fa-IR',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteConfig.url}/products?search={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: siteConfig.name,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteConfig.url}/images/hatef-logo.webp`,
+      },
+    },
+  }
+}
+
+export function generateCollectionPageSchema(items: {
+  name: string
+  description?: string
+  url: string
+  image?: string
+}[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'محصولات',
+    description: 'لیست محصولات کرمان هاتف ارتباط',
+    url: `${siteConfig.url}/products`,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.name,
+        description: item.description,
+        url: item.url,
+        image: item.image,
+      })),
+    },
+  }
+}

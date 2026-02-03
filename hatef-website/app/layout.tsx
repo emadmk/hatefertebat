@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { generateOrganizationSchema, generateLocalBusinessSchema, siteConfig } from '@/lib/seo'
+import { generateOrganizationSchema, generateLocalBusinessSchema, generateWebSiteSchema, siteConfig } from '@/lib/seo'
 import { GoogleAnalytics } from '@/components/common'
 
 export const metadata: Metadata = {
@@ -89,6 +89,7 @@ export default function RootLayout({
 }>) {
   const organizationSchema = generateOrganizationSchema()
   const localBusinessSchema = generateLocalBusinessSchema()
+  const webSiteSchema = generateWebSiteSchema()
 
   return (
     <html lang="fa" dir="rtl">
@@ -110,6 +111,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(localBusinessSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(webSiteSchema),
           }}
         />
       </head>
