@@ -1,38 +1,152 @@
 import { MetadataRoute } from 'next'
+import prisma from '@/lib/db'
 
 const baseUrl = 'https://hatefertebat.ir'
 
-// In production, these would come from the database
-const mockProducts = [
-  { slug: 'smart-keypad-standard', updatedAt: '2024-01-15' },
-  { slug: 'video-intercom-reader-pro', updatedAt: '2024-01-14' },
-  { slug: 'video-reader-pro', updatedAt: '2024-01-13' },
-]
+async function getProducts() {
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return products
+  } catch {
+    return []
+  }
+}
 
-const mockCategories = [
-  { slug: 'cctv', updatedAt: '2024-01-15' },
-  { slug: 'access-control', updatedAt: '2024-01-14' },
-  { slug: 'wireless', updatedAt: '2024-01-13' },
-]
+async function getCategories() {
+  try {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return categories
+  } catch {
+    return []
+  }
+}
 
-const mockPosts = [
-  { slug: 'choosing-right-cctv', updatedAt: '2024-01-15' },
-  { slug: 'smart-access-control-benefits', updatedAt: '2024-01-10' },
-]
+async function getPosts() {
+  try {
+    const posts = await prisma.post.findMany({
+      where: {
+        isActive: true,
+        publishedAt: { not: null },
+      },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return posts
+  } catch {
+    return []
+  }
+}
 
-const mockBrands = [
-  { slug: 'motorola', updatedAt: '2024-01-01' },
-  { slug: 'avigilon', updatedAt: '2024-01-01' },
-  { slug: 'cambium-networks', updatedAt: '2024-01-01' },
-]
+async function getBrands() {
+  try {
+    const brands = await prisma.brand.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return brands
+  } catch {
+    return []
+  }
+}
 
-const mockServices = [
-  { slug: 'installation', updatedAt: '2024-01-01' },
-  { slug: 'supply', updatedAt: '2024-01-01' },
-  { slug: 'engineering', updatedAt: '2024-01-01' },
-]
+async function getProjects() {
+  try {
+    const projects = await prisma.project.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return projects
+  } catch {
+    return []
+  }
+}
 
-export default function sitemap(): MetadataRoute.Sitemap {
+async function getCertificates() {
+  try {
+    const certificates = await prisma.certificate.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return certificates
+  } catch {
+    return []
+  }
+}
+
+async function getCatalogs() {
+  try {
+    const catalogs = await prisma.catalog.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return catalogs
+  } catch {
+    return []
+  }
+}
+
+async function getFaqs() {
+  try {
+    const faqs = await prisma.faq.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return faqs
+  } catch {
+    return []
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Fetch all data from database
+  const [products, categories, posts, brands, projects, certificates, catalogs, faqs] = await Promise.all([
+    getProducts(),
+    getCategories(),
+    getPosts(),
+    getBrands(),
+    getProjects(),
+    getCertificates(),
+    getCatalogs(),
+    getFaqs(),
+  ])
+
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -104,7 +218,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
 
   // Products
-  const productPages: MetadataRoute.Sitemap = mockProducts.map((product) => ({
+  const productPages: MetadataRoute.Sitemap = products.map((product) => ({
     url: `${baseUrl}/products/${product.slug}`,
     lastModified: new Date(product.updatedAt),
     changeFrequency: 'weekly',
@@ -112,7 +226,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }))
 
   // Categories
-  const categoryPages: MetadataRoute.Sitemap = mockCategories.map((category) => ({
+  const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
     url: `${baseUrl}/products/category/${category.slug}`,
     lastModified: new Date(category.updatedAt),
     changeFrequency: 'weekly',
@@ -120,7 +234,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }))
 
   // Blog posts
-  const postPages: MetadataRoute.Sitemap = mockPosts.map((post) => ({
+  const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(post.updatedAt),
     changeFrequency: 'monthly',
@@ -128,19 +242,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }))
 
   // Brands
-  const brandPages: MetadataRoute.Sitemap = mockBrands.map((brand) => ({
+  const brandPages: MetadataRoute.Sitemap = brands.map((brand) => ({
     url: `${baseUrl}/brands/${brand.slug}`,
     lastModified: new Date(brand.updatedAt),
     changeFrequency: 'monthly',
     priority: 0.6,
   }))
 
-  // Services
-  const servicePages: MetadataRoute.Sitemap = mockServices.map((service) => ({
-    url: `${baseUrl}/services/${service.slug}`,
-    lastModified: new Date(service.updatedAt),
+  // Projects
+  const projectPages: MetadataRoute.Sitemap = projects.map((project) => ({
+    url: `${baseUrl}/projects/${project.slug}`,
+    lastModified: new Date(project.updatedAt),
     changeFrequency: 'monthly',
-    priority: 0.7,
+    priority: 0.6,
+  }))
+
+  // Certificates
+  const certificatePages: MetadataRoute.Sitemap = certificates.map((certificate) => ({
+    url: `${baseUrl}/certificates/${certificate.slug}`,
+    lastModified: new Date(certificate.updatedAt),
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  }))
+
+  // Catalogs
+  const catalogPages: MetadataRoute.Sitemap = catalogs.map((catalog) => ({
+    url: `${baseUrl}/catalog/${catalog.slug}`,
+    lastModified: new Date(catalog.updatedAt),
+    changeFrequency: 'monthly',
+    priority: 0.5,
   }))
 
   return [
@@ -149,6 +279,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...categoryPages,
     ...postPages,
     ...brandPages,
-    ...servicePages,
+    ...projectPages,
+    ...certificatePages,
+    ...catalogPages,
   ]
 }
