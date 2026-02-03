@@ -1,6 +1,10 @@
 import { MetadataRoute } from 'next'
 import prisma from '@/lib/db'
 
+// Force dynamic rendering - don't cache sitemap
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const baseUrl = 'https://hatefertebat.ir'
 
 interface SitemapItem {
