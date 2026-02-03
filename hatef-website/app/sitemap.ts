@@ -118,25 +118,9 @@ async function getCatalogs() {
   }
 }
 
-async function getFaqs() {
-  try {
-    const faqs = await prisma.faq.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        updatedAt: true,
-      },
-      orderBy: { updatedAt: 'desc' },
-    })
-    return faqs
-  } catch {
-    return []
-  }
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all data from database
-  const [products, categories, posts, brands, projects, certificates, catalogs, faqs] = await Promise.all([
+  const [products, categories, posts, brands, projects, certificates, catalogs] = await Promise.all([
     getProducts(),
     getCategories(),
     getPosts(),
@@ -144,7 +128,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getProjects(),
     getCertificates(),
     getCatalogs(),
-    getFaqs(),
   ])
 
   // Static pages
