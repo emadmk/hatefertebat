@@ -3,7 +3,12 @@ import prisma from '@/lib/db'
 
 const baseUrl = 'https://hatefertebat.ir'
 
-async function getProducts() {
+interface SitemapItem {
+  slug: string
+  updatedAt: Date
+}
+
+async function getProducts(): Promise<SitemapItem[]> {
   try {
     const products = await prisma.product.findMany({
       where: { isActive: true },
@@ -19,7 +24,7 @@ async function getProducts() {
   }
 }
 
-async function getCategories() {
+async function getCategories(): Promise<SitemapItem[]> {
   try {
     const categories = await prisma.category.findMany({
       where: { isActive: true },
@@ -35,7 +40,7 @@ async function getCategories() {
   }
 }
 
-async function getPosts() {
+async function getPosts(): Promise<SitemapItem[]> {
   try {
     const posts = await prisma.post.findMany({
       where: {
@@ -54,7 +59,7 @@ async function getPosts() {
   }
 }
 
-async function getBrands() {
+async function getBrands(): Promise<SitemapItem[]> {
   try {
     const brands = await prisma.brand.findMany({
       where: { isActive: true },
@@ -70,7 +75,7 @@ async function getBrands() {
   }
 }
 
-async function getProjects() {
+async function getProjects(): Promise<SitemapItem[]> {
   try {
     const projects = await prisma.project.findMany({
       where: { isActive: true },
@@ -86,7 +91,7 @@ async function getProjects() {
   }
 }
 
-async function getCertificates() {
+async function getCertificates(): Promise<SitemapItem[]> {
   try {
     const certificates = await prisma.certificate.findMany({
       where: { isActive: true },
@@ -102,7 +107,7 @@ async function getCertificates() {
   }
 }
 
-async function getCatalogs() {
+async function getCatalogs(): Promise<SitemapItem[]> {
   try {
     const catalogs = await prisma.catalog.findMany({
       where: { isActive: true },
