@@ -15,7 +15,7 @@ interface SitemapItem {
 async function getProducts(): Promise<SitemapItem[]> {
   try {
     const products = await prisma.product.findMany({
-      where: { isActive: true },
+      where: { status: 'PUBLISHED' },
       select: {
         slug: true,
         updatedAt: true,
@@ -31,7 +31,6 @@ async function getProducts(): Promise<SitemapItem[]> {
 async function getCategories(): Promise<SitemapItem[]> {
   try {
     const categories = await prisma.category.findMany({
-      where: { isActive: true },
       select: {
         slug: true,
         updatedAt: true,
@@ -47,10 +46,7 @@ async function getCategories(): Promise<SitemapItem[]> {
 async function getPosts(): Promise<SitemapItem[]> {
   try {
     const posts = await prisma.post.findMany({
-      where: {
-        isActive: true,
-        publishedAt: { not: null },
-      },
+      where: { status: 'PUBLISHED' },
       select: {
         slug: true,
         updatedAt: true,
@@ -66,7 +62,6 @@ async function getPosts(): Promise<SitemapItem[]> {
 async function getBrands(): Promise<SitemapItem[]> {
   try {
     const brands = await prisma.brand.findMany({
-      where: { isActive: true },
       select: {
         slug: true,
         updatedAt: true,
@@ -82,7 +77,7 @@ async function getBrands(): Promise<SitemapItem[]> {
 async function getProjects(): Promise<SitemapItem[]> {
   try {
     const projects = await prisma.project.findMany({
-      where: { isActive: true },
+      where: { status: 'PUBLISHED' },
       select: {
         slug: true,
         updatedAt: true,
@@ -98,7 +93,7 @@ async function getProjects(): Promise<SitemapItem[]> {
 async function getCertificates(): Promise<SitemapItem[]> {
   try {
     const certificates = await prisma.certificate.findMany({
-      where: { isActive: true },
+      where: { status: 'PUBLISHED' },
       select: {
         slug: true,
         updatedAt: true,
@@ -114,7 +109,7 @@ async function getCertificates(): Promise<SitemapItem[]> {
 async function getCatalogs(): Promise<SitemapItem[]> {
   try {
     const catalogs = await prisma.catalog.findMany({
-      where: { isActive: true },
+      where: { status: 'PUBLISHED' },
       select: {
         slug: true,
         updatedAt: true,

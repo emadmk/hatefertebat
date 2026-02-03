@@ -15,7 +15,6 @@ interface Brand {
 async function getBrands(): Promise<Brand[]> {
   try {
     const brands = await prisma.brand.findMany({
-      where: { isActive: true },
       select: {
         id: true,
         name: true,
