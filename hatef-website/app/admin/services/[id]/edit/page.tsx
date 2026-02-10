@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Save } from 'lucide-react'
 import ImageUpload from '../../../components/ImageUpload'
-import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
+import { RichTextEditor, SeoAnalyzer, SchemaGenerator, KeywordSynonyms } from '@/components/admin'
 
 const iconOptions = [
   'Camera', 'Radio', 'Shield', 'Headphones', 'Network',
@@ -178,11 +178,10 @@ export default function EditServicePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     توضیحات کامل
                   </label>
-                  <textarea
-                    rows={6}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    value={formData.fullDesc}
-                    onChange={(e) => setFormData({ ...formData, fullDesc: e.target.value })}
+                  <RichTextEditor
+                    content={formData.fullDesc}
+                    onChange={(content) => setFormData({ ...formData, fullDesc: content })}
+                    placeholder="توضیحات کامل خدمت را وارد کنید..."
                   />
                 </div>
               </div>
@@ -273,12 +272,21 @@ export default function EditServicePage() {
                       ({formData.metaTitle.length}/60)
                     </span>
                   </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    value={formData.metaTitle}
-                    onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.metaTitle}
+                      onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, metaTitle: `${formData.titleFa} | هاتف ارتباط کرمان` })}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700 whitespace-nowrap"
+                    >
+                      تولید خودکار
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -297,6 +305,12 @@ export default function EditServicePage() {
               </div>
             </div>
 
+            {/* Keyword Synonyms */}
+            <KeywordSynonyms
+              focusKeyword={formData.focusKeyword}
+              onChange={(keywords) => setFormData({ ...formData, focusKeyword: keywords.join(', ') })}
+            />
+
             {/* SEO Analyzer */}
             <SeoAnalyzer
               title={formData.titleFa}
@@ -307,6 +321,17 @@ export default function EditServicePage() {
               focusKeyword={formData.focusKeyword}
               onFocusKeywordChange={(keyword) => setFormData({ ...formData, focusKeyword: keyword })}
               baseUrl="https://hatefertebat.ir/services"
+            />
+
+            {/* Schema Generator */}
+            <SchemaGenerator
+              type="service"
+              data={{
+                name: formData.titleFa,
+                description: formData.shortDesc || formData.fullDesc?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
+                image: formData.image || '',
+                url: `https://hatefertebat.ir/services/${formData.slug}`,
+              }}
             />
           </div>
         </div>

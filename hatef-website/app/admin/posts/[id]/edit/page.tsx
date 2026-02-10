@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Loader2, Save } from 'lucide-react'
 import ImageUpload from '../../../components/ImageUpload'
-import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
+import { RichTextEditor, SeoAnalyzer, SchemaGenerator, KeywordSynonyms } from '@/components/admin'
 
 interface PostCategory {
   id: string
@@ -231,11 +231,10 @@ export default function EditPostPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               محتوا
             </label>
-            <textarea
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={10}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            <RichTextEditor
+              content={form.content}
+              onChange={(content) => setForm({ ...form, content })}
+              placeholder="محتوای مطلب را وارد کنید..."
             />
           </div>
 
@@ -255,12 +254,21 @@ export default function EditPostPage() {
                 ({form.metaTitle.length}/60)
               </span>
             </label>
-            <input
-              type="text"
-              value={form.metaTitle}
-              onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={form.metaTitle}
+                onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, metaTitle: `${form.titleFa} | هاتف ارتباط کرمان` })}
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700 whitespace-nowrap"
+              >
+                تولید خودکار
+              </button>
+            </div>
           </div>
 
           <div>
@@ -278,6 +286,14 @@ export default function EditPostPage() {
             />
           </div>
 
+          {/* Keyword Synonyms */}
+          <div className="md:col-span-2">
+            <KeywordSynonyms
+              focusKeyword={form.focusKeyword}
+              onChange={(keywords) => setForm({ ...form, focusKeyword: keywords.join(', ') })}
+            />
+          </div>
+
           {/* SEO Analyzer */}
           <div className="md:col-span-2">
             <SeoAnalyzer
@@ -289,6 +305,20 @@ export default function EditPostPage() {
               focusKeyword={form.focusKeyword}
               onFocusKeywordChange={(keyword) => setForm({ ...form, focusKeyword: keyword })}
               baseUrl="https://hatefertebat.ir/blog"
+            />
+          </div>
+
+          {/* Schema Generator */}
+          <div className="md:col-span-2">
+            <SchemaGenerator
+              type="article"
+              data={{
+                name: form.titleFa,
+                description: form.excerpt || form.content?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
+                image: form.image || '',
+                url: `https://hatefertebat.ir/blog/${form.slug}`,
+                author: form.author || 'هاتف ارتباط کرمان',
+              }}
             />
           </div>
         </div>

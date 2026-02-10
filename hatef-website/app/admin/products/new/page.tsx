@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, Plus, X, Loader2, Save } from 'lucide-react'
 import ImageUpload from '../../components/ImageUpload'
 import FileUpload from '../../components/FileUpload'
-import SeoAnalyzer from '@/components/admin/SeoAnalyzer'
+import { RichTextEditor, SeoAnalyzer, SchemaGenerator, KeywordSynonyms } from '@/components/admin'
 
 interface Category {
   id: string
@@ -184,11 +184,10 @@ export default function NewProductPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     توضیحات کامل
                   </label>
-                  <textarea
-                    rows={6}
-                    value={form.fullDesc}
-                    onChange={(e) => setForm({ ...form, fullDesc: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  <RichTextEditor
+                    content={form.fullDesc}
+                    onChange={(content) => setForm({ ...form, fullDesc: content })}
+                    placeholder="توضیحات کامل محصول را وارد کنید..."
                   />
                 </div>
               </div>
@@ -297,12 +296,21 @@ export default function NewProductPage() {
                       ({form.metaTitle.length}/60)
                     </span>
                   </label>
-                  <input
-                    type="text"
-                    value={form.metaTitle}
-                    onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={form.metaTitle}
+                      onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                      className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, metaTitle: `${form.titleFa} | هاتف ارتباط کرمان` })}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700 whitespace-nowrap"
+                    >
+                      تولید خودکار
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -320,6 +328,12 @@ export default function NewProductPage() {
                 </div>
               </div>
             </div>
+
+            {/* Keyword Synonyms */}
+            <KeywordSynonyms
+              focusKeyword={form.focusKeyword}
+              onChange={(keywords) => setForm({ ...form, focusKeyword: keywords.join(', ') })}
+            />
 
             {/* SEO Analyzer */}
             <SeoAnalyzer
@@ -425,6 +439,17 @@ export default function NewProductPage() {
                 accept=".pdf"
               />
             </div>
+
+            {/* Schema Generator */}
+            <SchemaGenerator
+              type="product"
+              data={{
+                name: form.titleFa,
+                description: form.shortDesc || form.fullDesc?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
+                image: form.image || '',
+                url: `https://hatefertebat.ir/products/${form.slug}`,
+              }}
+            />
           </div>
         </div>
       </form>

@@ -1,3 +1,6 @@
 export { default as RichTextEditor } from './RichTextEditor'
 export { default as MediaLibrary } from './MediaLibrary'
 export { default as SeoHelper } from './SeoHelper'
+export { default as SeoAnalyzer } from './SeoAnalyzer'
+export { default as SchemaGenerator } from './SchemaGenerator'
+export { default as KeywordSynonyms } from './KeywordSynonyms'
