@@ -1,44 +1,56 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, X, Tags, Lightbulb } from 'lucide-react'
 
 interface KeywordSynonymsProps {
-  keywords: string[]
-  synonyms: string[]
-  onKeywordsChange: (keywords: string[]) => void
-  onSynonymsChange: (synonyms: string[]) => void
+  focusKeyword?: string
+  onChange: (keywords: string[]) => void
 }
 
 export default function KeywordSynonyms({
-  keywords,
-  synonyms,
-  onKeywordsChange,
-  onSynonymsChange,
+  focusKeyword = '',
+  onChange,
 }: KeywordSynonymsProps) {
+  const [keywords, setKeywords] = useState<string[]>([])
+  const [synonyms, setSynonyms] = useState<string[]>([])
   const [newKeyword, setNewKeyword] = useState('')
   const [newSynonym, setNewSynonym] = useState('')
 
+  // Initialize from focusKeyword
+  useEffect(() => {
+    if (focusKeyword) {
+      const parts = focusKeyword.split(',').map(k => k.trim()).filter(Boolean)
+      setKeywords(parts)
+    }
+  }, [])
+
+  // Update parent when keywords or synonyms change
+  useEffect(() => {
+    const allKeywords = [...keywords, ...synonyms]
+    onChange(allKeywords)
+  }, [keywords, synonyms])
+
   const addKeyword = () => {
     if (newKeyword.trim() && !keywords.includes(newKeyword.trim())) {
-      onKeywordsChange([...keywords, newKeyword.trim()])
+      setKeywords([...keywords, newKeyword.trim()])
       setNewKeyword('')
     }
   }
 
   const removeKeyword = (keyword: string) => {
-    onKeywordsChange(keywords.filter((k) => k !== keyword))
+    setKeywords(keywords.filter((k) => k !== keyword))
   }
 
   const addSynonym = () => {
     if (newSynonym.trim() && !synonyms.includes(newSynonym.trim())) {
-      onSynonymsChange([...synonyms, newSynonym.trim()])
+      setSynonyms([...synonyms, newSynonym.trim()])
       setNewSynonym('')
     }
   }
 
   const removeSynonym = (synonym: string) => {
-    onSynonymsChange(synonyms.filter((s) => s !== synonym))
+    setSynonyms(synonyms.filter((s) => s !== synonym))
   }
 
   // Suggested synonyms based on common SEO patterns
@@ -60,14 +72,14 @@ export default function KeywordSynonyms({
 
   const addSuggestedSynonym = (synonym: string) => {
     if (!synonyms.includes(synonym)) {
-      onSynonymsChange([...synonyms, synonym])
+      setSynonyms([...synonyms, synonym])
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
       {/* Keywords Section */}
-      <div className="border rounded-lg p-4 bg-white">
+      <div className="border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
           <Tags className="w-5 h-5 text-primary" />
           <h3 className="font-medium">کلمات کلیدی</h3>
@@ -120,7 +132,7 @@ export default function KeywordSynonyms({
       </div>
 
       {/* Synonyms Section */}
-      <div className="border rounded-lg p-4 bg-white">
+      <div className="border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
           <Lightbulb className="w-5 h-5 text-yellow-500" />
           <h3 className="font-medium">مترادف‌ها و کلمات مرتبط (برای SEO)</h3>

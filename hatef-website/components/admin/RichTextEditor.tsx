@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react'
+import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
@@ -478,59 +478,6 @@ export default function RichTextEditor({
           )}
         </div>
       </div>
-
-      {/* Bubble Menu for selected text */}
-      {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-          <div className="bg-gray-900 rounded-lg shadow-lg p-1 flex gap-1">
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={`p-1.5 rounded text-white hover:bg-gray-700 ${editor.isActive('bold') ? 'bg-gray-700' : ''}`}
-              title="بولد"
-            >
-              <Bold className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={`p-1.5 rounded text-white hover:bg-gray-700 ${editor.isActive('italic') ? 'bg-gray-700' : ''}`}
-              title="ایتالیک"
-            >
-              <Italic className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={`p-1.5 rounded text-white hover:bg-gray-700 ${editor.isActive('underline') ? 'bg-gray-700' : ''}`}
-              title="زیرخط"
-            >
-              <UnderlineIcon className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const url = window.prompt('آدرس لینک:')
-                if (url) {
-                  editor.chain().focus().setLink({ href: url }).run()
-                }
-              }}
-              className={`p-1.5 rounded text-white hover:bg-gray-700 ${editor.isActive('link') ? 'bg-gray-700' : ''}`}
-              title="لینک"
-            >
-              <LinkIcon className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHighlight().run()}
-              className={`p-1.5 rounded text-white hover:bg-gray-700 ${editor.isActive('highlight') ? 'bg-gray-700' : ''}`}
-              title="هایلایت"
-            >
-              <Highlighter className="w-4 h-4" />
-            </button>
-          </div>
-        </BubbleMenu>
-      )}
 
       {/* Editor */}
       <EditorContent editor={editor} />
