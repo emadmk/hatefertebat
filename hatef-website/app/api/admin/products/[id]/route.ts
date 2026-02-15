@@ -16,6 +16,7 @@ export async function GET(
       include: {
         category: { select: { id: true, nameFa: true, slug: true } },
         brand: { select: { id: true, name: true, slug: true } },
+        attributes: { orderBy: { order: 'asc' } },
       },
     })
 
@@ -26,27 +27,9 @@ export async function GET(
       )
     }
 
-    // Parse attributes from JSON if stored as string
-    let attributes: { key: string; value: string }[] = []
-    if (product.attributes) {
-      try {
-        const parsed = typeof product.attributes === 'string'
-          ? JSON.parse(product.attributes)
-          : product.attributes
-        if (Array.isArray(parsed)) {
-          attributes = parsed
-        }
-      } catch {
-        // Invalid JSON, ignore
-      }
-    }
-
     return NextResponse.json({
       success: true,
-      data: {
-        ...product,
-        attributes,
-      },
+      data: product,
     })
   } catch (error) {
     console.error('Error fetching product:', error)
