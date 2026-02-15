@@ -48,6 +48,7 @@ async function getProduct(slug: string) {
     include: {
       category: { select: { id: true, nameFa: true, nameEn: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true, logo: true } },
+      attributes: { select: { key: true, value: true }, orderBy: { order: 'asc' } },
     },
   })
 
@@ -107,35 +108,11 @@ export default async function ProductPage({ params }: PageProps) {
 
   const relatedProducts = await getRelatedProducts(product.categoryId, product.id)
 
-  // Parse attributes from JSON string if needed
-  let attributes: { key: string; value: string }[] = []
-  if (product.attributes) {
-    try {
-      const parsed = typeof product.attributes === 'string'
-        ? JSON.parse(product.attributes)
-        : product.attributes
-      if (Array.isArray(parsed)) {
-        attributes = parsed
-      }
-    } catch {
-      // Invalid JSON, ignore
-    }
-  }
+  // Attributes come from Prisma relation
+  const attributes = product.attributes || []
 
-  // Parse gallery from JSON string if needed
-  let gallery: string[] = []
-  if (product.gallery) {
-    try {
-      const parsed = typeof product.gallery === 'string'
-        ? JSON.parse(product.gallery)
-        : product.gallery
-      if (Array.isArray(parsed)) {
-        gallery = parsed
-      }
-    } catch {
-      // Invalid JSON, ignore
-    }
-  }
+  // Gallery is a String[] in Prisma schema
+  const gallery = product.gallery || []
 
   const breadcrumbItems = [
     { name: 'خانه', url: '/' },
