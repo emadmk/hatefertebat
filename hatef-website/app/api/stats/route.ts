@@ -22,7 +22,7 @@ export async function GET() {
       prisma.post.count({ where: { status: 'PUBLISHED' } }),
       prisma.project.count({ where: { status: 'PUBLISHED' } }),
       prisma.inquiry.count(),
-      prisma.inquiry.count({ where: { status: 'PENDING' } }),
+      prisma.inquiry.count({ where: { status: 'NEW' } }),
     ])
 
     // Get recent inquiries

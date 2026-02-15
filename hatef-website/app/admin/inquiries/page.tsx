@@ -70,13 +70,13 @@ export default function InquiriesPage() {
       const res = await fetch(`/api/admin/inquiries/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'REPLIED' }),
+        body: JSON.stringify({ status: 'ANSWERED' }),
       })
       const data = await res.json()
       if (data.success) {
         fetchInquiries()
         if (selectedInquiry?.id === id) {
-          setSelectedInquiry({ ...selectedInquiry, status: 'REPLIED' })
+          setSelectedInquiry({ ...selectedInquiry, status: 'ANSWERED' })
         }
       }
     } catch (error) {
@@ -99,7 +99,7 @@ export default function InquiriesPage() {
     }
   }
 
-  const pendingCount = inquiries.filter((i) => i.status === 'PENDING').length
+  const pendingCount = inquiries.filter((i) => i.status === 'NEW').length
 
   if (loading) {
     return (
@@ -139,8 +139,8 @@ export default function InquiriesPage() {
             className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="">همه وضعیت‌ها</option>
-            <option value="PENDING">در انتظار پاسخ</option>
-            <option value="REPLIED">پاسخ داده شده</option>
+            <option value="NEW">در انتظار پاسخ</option>
+            <option value="ANSWERED">پاسخ داده شده</option>
           </select>
         </div>
       </div>
@@ -168,12 +168,12 @@ export default function InquiriesPage() {
                   </div>
                   <span
                     className={`px-2 py-1 text-xs rounded-full ${
-                      inquiry.status === 'PENDING'
+                      inquiry.status === 'NEW'
                         ? 'bg-yellow-100 text-yellow-700'
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {inquiry.status === 'PENDING' ? 'در انتظار' : 'پاسخ داده شده'}
+                    {inquiry.status === 'NEW' ? 'در انتظار' : 'پاسخ داده شده'}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-2 mb-2">{inquiry.message}</p>
@@ -191,12 +191,12 @@ export default function InquiriesPage() {
                 <h2 className="font-bold text-dark">جزئیات استعلام</h2>
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
-                    selectedInquiry.status === 'PENDING'
+                    selectedInquiry.status === 'NEW'
                       ? 'bg-yellow-100 text-yellow-700'
                       : 'bg-green-100 text-green-700'
                   }`}
                 >
-                  {selectedInquiry.status === 'PENDING' ? 'در انتظار' : 'پاسخ داده شده'}
+                  {selectedInquiry.status === 'NEW' ? 'در انتظار' : 'پاسخ داده شده'}
                 </span>
               </div>
 
@@ -232,7 +232,7 @@ export default function InquiriesPage() {
                   <MessageSquare className="w-4 h-4" />
                   پاسخ
                 </button>
-                {selectedInquiry.status === 'PENDING' && (
+                {selectedInquiry.status === 'NEW' && (
                   <button
                     onClick={() => handleMarkAsReplied(selectedInquiry.id)}
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
