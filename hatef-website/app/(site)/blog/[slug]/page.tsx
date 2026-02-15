@@ -64,15 +64,23 @@ export default async function BlogPostPage({ params }: PageProps) {
     { name: post.titleFa, url: `/blog/${post.slug}` },
   ]
 
-  const articleSchema = generateArticleSchema({
-    title: post.titleFa,
-    description: post.excerpt || '',
-    image: post.image || '/images/blog/default.jpg',
-    author: post.author || 'تیم فنی',
-    datePublished: formatDateISO(post.publishedAt),
-    dateModified: formatDateISO(post.updatedAt),
-    url: `https://hatefertebat.ir/blog/${post.slug}`,
-  })
+  let articleSchema
+  try {
+    articleSchema = post.jsonLd ? JSON.parse(post.jsonLd) : null
+  } catch {
+    articleSchema = null
+  }
+  if (!articleSchema) {
+    articleSchema = generateArticleSchema({
+      title: post.titleFa,
+      description: post.excerpt || '',
+      image: post.image || '/images/blog/default.jpg',
+      author: post.author || 'تیم فنی',
+      datePublished: formatDateISO(post.publishedAt),
+      dateModified: formatDateISO(post.updatedAt),
+      url: `https://hatefertebat.ir/blog/${post.slug}`,
+    })
+  }
 
   return (
     <>

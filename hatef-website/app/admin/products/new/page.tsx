@@ -40,6 +40,7 @@ export default function NewProductPage() {
     metaTitle: '',
     metaDesc: '',
     focusKeyword: '',
+    jsonLd: '',
   })
 
   const [attributes, setAttributes] = useState([{ key: '', value: '' }])
@@ -89,6 +90,7 @@ export default function NewProductPage() {
           categoryId: form.categoryId || null,
           brandId: form.brandId || null,
           attributes: attributes.filter((a) => a.key && a.value),
+          jsonLd: form.jsonLd || null,
         }),
       })
 
@@ -449,6 +451,8 @@ export default function NewProductPage() {
                 image: form.image || '',
                 url: `https://hatefertebat.ir/products/${form.slug}`,
               }}
+              value={form.jsonLd}
+              onChange={(jsonLd) => setForm({ ...form, jsonLd })}
             />
           </div>
         </div>

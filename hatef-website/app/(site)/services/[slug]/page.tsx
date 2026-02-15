@@ -84,7 +84,36 @@ export default async function ServicePage({ params }: PageProps) {
     { name: service.titleFa, url: `/services/${service.slug}` },
   ]
 
+  let serviceSchema
+  try {
+    serviceSchema = service.jsonLd ? JSON.parse(service.jsonLd) : null
+  } catch {
+    serviceSchema = null
+  }
+  if (!serviceSchema) {
+    serviceSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: service.titleFa,
+      description: service.shortDesc || '',
+      provider: {
+        '@type': 'Organization',
+        name: 'کرمان هاتف ارتباط',
+        url: 'https://hatefertebat.ir',
+      },
+      areaServed: {
+        '@type': 'Country',
+        name: 'Iran',
+      },
+    }
+  }
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
       <div className="bg-white border-b">
@@ -163,5 +192,6 @@ export default async function ServicePage({ params }: PageProps) {
         </div>
       </div>
     </div>
+    </>
   )
 }

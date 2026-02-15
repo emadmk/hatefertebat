@@ -32,6 +32,7 @@ export default function EditServicePage() {
     metaTitle: '',
     metaDesc: '',
     focusKeyword: '',
+    jsonLd: '',
   })
 
   const fetchService = useCallback(async () => {
@@ -54,6 +55,7 @@ export default function EditServicePage() {
           metaTitle: service.metaTitle || '',
           metaDesc: service.metaDesc || '',
           focusKeyword: service.focusKeyword || '',
+          jsonLd: service.jsonLd || '',
         })
       }
     } catch (error) {
@@ -332,6 +334,8 @@ export default function EditServicePage() {
                 image: formData.image || '',
                 url: `https://hatefertebat.ir/services/${formData.slug}`,
               }}
+              value={formData.jsonLd}
+              onChange={(jsonLd) => setFormData({ ...formData, jsonLd })}
             />
           </div>
         </div>

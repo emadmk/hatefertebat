@@ -28,6 +28,7 @@ export default function NewServicePage() {
     metaTitle: '',
     metaDesc: '',
     focusKeyword: '',
+    jsonLd: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -285,6 +286,8 @@ export default function NewServicePage() {
                 image: formData.image || '',
                 url: `https://hatefertebat.ir/services/${formData.slug}`,
               }}
+              value={formData.jsonLd}
+              onChange={(jsonLd) => setFormData({ ...formData, jsonLd })}
             />
           </div>
         </div>

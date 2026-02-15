@@ -17,6 +17,7 @@ const serviceSchema = z.object({
   order: z.number().optional(),
   metaTitle: z.string().optional(),
   metaDesc: z.string().optional(),
+  jsonLd: z.string().nullable().optional(),
 })
 
 export async function GET() {

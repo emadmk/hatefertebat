@@ -19,6 +19,7 @@ const postSchema = z.object({
   tags: z.array(z.string()).optional(),
   metaTitle: z.string().optional(),
   metaDesc: z.string().optional(),
+  jsonLd: z.string().nullable().optional(),
 })
 
 export async function GET(request: NextRequest) {

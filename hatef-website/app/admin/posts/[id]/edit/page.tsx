@@ -34,6 +34,7 @@ export default function EditPostPage() {
     metaTitle: '',
     metaDesc: '',
     focusKeyword: '',
+    jsonLd: '',
   })
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function EditPostPage() {
             metaTitle: post.metaTitle || '',
             metaDesc: post.metaDesc || '',
             focusKeyword: post.focusKeyword || '',
+            jsonLd: post.jsonLd || '',
           })
         }
         if (catData.success) {
@@ -81,6 +83,7 @@ export default function EditPostPage() {
           image: form.image || null,
           postCategoryId: form.postCategoryId || null,
           tags: form.tags ? form.tags.split(',').map((t) => t.trim()) : [],
+          jsonLd: form.jsonLd || null,
         }),
       })
 
@@ -319,6 +322,8 @@ export default function EditPostPage() {
                 url: `https://hatefertebat.ir/blog/${form.slug}`,
                 author: form.author || 'هاتف ارتباط کرمان',
               }}
+              value={form.jsonLd}
+              onChange={(jsonLd) => setForm({ ...form, jsonLd })}
             />
           </div>
         </div>

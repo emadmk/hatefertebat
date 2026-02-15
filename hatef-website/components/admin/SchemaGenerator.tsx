@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Copy, Check, Wand2, Code } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Copy, Check, Wand2, Code, Edit3 } from 'lucide-react'
 
 interface SchemaGeneratorProps {
   type: 'product' | 'article' | 'faq' | 'service'
@@ -17,13 +17,17 @@ interface SchemaGeneratorProps {
     author?: string
     questions?: { question: string; answer: string }[]
   }
+  value?: string
+  onChange?: (value: string) => void
 }
 
-export default function SchemaGenerator({ type, data }: SchemaGeneratorProps) {
+export default function SchemaGenerator({ type, data, value, onChange }: SchemaGeneratorProps) {
   const [copied, setCopied] = useState(false)
   const [showSchema, setShowSchema] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState('')
 
-  const generateSchema = () => {
+  const generateSchema = useCallback(() => {
     const baseUrl = 'https://hatefertebat.ir'
 
     switch (type) {
@@ -127,10 +131,45 @@ export default function SchemaGenerator({ type, data }: SchemaGeneratorProps) {
       default:
         return {}
     }
+  }, [type, data])
+
+  // Auto-generate schema when value is empty and data changes
+  useEffect(() => {
+    if (!value && data.name && onChange) {
+      const schema = generateSchema()
+      const schemaStr = JSON.stringify(schema, null, 2)
+      onChange(schemaStr)
+    }
+  }, [data.name, data.description, data.image, data.brand, data.category, data.url, data.author]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const schemaString = value || JSON.stringify(generateSchema(), null, 2)
+
+  useEffect(() => {
+    setEditValue(schemaString)
+  }, [schemaString])
+
+  const handleGenerate = () => {
+    const schema = generateSchema()
+    const schemaStr = JSON.stringify(schema, null, 2)
+    if (onChange) {
+      onChange(schemaStr)
+    }
+    setEditValue(schemaStr)
+    setIsEditing(false)
   }
 
-  const schema = generateSchema()
-  const schemaString = JSON.stringify(schema, null, 2)
+  const handleSaveEdit = () => {
+    try {
+      // Validate JSON
+      JSON.parse(editValue)
+      if (onChange) {
+        onChange(editValue)
+      }
+      setIsEditing(false)
+    } catch {
+      alert('فرمت JSON نامعتبر است. لطفا JSON صحیح وارد کنید.')
+    }
+  }
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(schemaString)
@@ -167,7 +206,27 @@ export default function SchemaGenerator({ type, data }: SchemaGeneratorProps) {
 
       {showSchema && (
         <div className="p-4">
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-3">
+            <button
+              type="button"
+              onClick={handleGenerate}
+              className="flex items-center gap-2 text-sm bg-primary text-white hover:bg-primary-dark px-3 py-1.5 rounded"
+            >
+              <Wand2 className="w-4 h-4" />
+              تولید خودکار
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsEditing(!isEditing)}
+              className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded ${
+                isEditing
+                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <Edit3 className="w-4 h-4" />
+              {isEditing ? 'در حال ویرایش' : 'ویرایش دستی'}
+            </button>
             <button
               type="button"
               onClick={copyToClipboard}
@@ -179,23 +238,56 @@ export default function SchemaGenerator({ type, data }: SchemaGeneratorProps) {
             <button
               type="button"
               onClick={copyAsScript}
-              className="flex items-center gap-2 text-sm bg-primary text-white hover:bg-primary-dark px-3 py-1.5 rounded"
+              className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded"
             >
               <Code className="w-4 h-4" />
               کپی با تگ Script
             </button>
           </div>
 
-          <pre
-            className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs leading-relaxed"
-            dir="ltr"
-          >
-            {schemaString}
-          </pre>
+          {isEditing ? (
+            <div>
+              <textarea
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="w-full h-80 bg-gray-900 text-green-400 p-4 rounded-lg text-xs leading-relaxed font-mono resize-y focus:ring-2 focus:ring-primary focus:outline-none"
+                dir="ltr"
+                spellCheck={false}
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  className="flex items-center gap-2 text-sm bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded"
+                >
+                  <Check className="w-4 h-4" />
+                  ذخیره تغییرات Schema
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditValue(schemaString)
+                    setIsEditing(false)
+                  }}
+                  className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded text-gray-700"
+                >
+                  انصراف
+                </button>
+              </div>
+            </div>
+          ) : (
+            <pre
+              className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs leading-relaxed cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+              dir="ltr"
+              onClick={() => setIsEditing(true)}
+              title="برای ویرایش کلیک کنید"
+            >
+              {schemaString}
+            </pre>
+          )}
 
           <div className="mt-3 text-xs text-gray-500">
-            💡 این Schema به صورت خودکار در صفحه محصول قرار می‌گیرد. برای اضافه کردن دستی، کد را کپی کرده و در
-            صفحه HTML قرار دهید.
+            این Schema به صورت خودکار تولید و در صفحه سایت برای سئو قرار می‌گیرد. می‌توانید آن را ویرایش کنید یا با AI بسازید و اینجا پیست کنید.
           </div>
         </div>
       )}

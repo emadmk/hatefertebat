@@ -121,14 +121,22 @@ export default async function ProductPage({ params }: PageProps) {
     { name: product.titleFa, url: `/products/${product.slug}` },
   ]
 
-  const productSchema = generateProductSchema({
-    name: product.titleFa,
-    description: product.shortDesc || '',
-    image: getImageUrl(product.image),
-    brand: product.brand?.name,
-    category: product.category?.nameFa,
-    url: `https://hatefertebat.ir/products/${product.slug}`,
-  })
+  let productSchema
+  try {
+    productSchema = product.jsonLd ? JSON.parse(product.jsonLd) : null
+  } catch {
+    productSchema = null
+  }
+  if (!productSchema) {
+    productSchema = generateProductSchema({
+      name: product.titleFa,
+      description: product.shortDesc || '',
+      image: getImageUrl(product.image),
+      brand: product.brand?.name,
+      category: product.category?.nameFa,
+      url: `https://hatefertebat.ir/products/${product.slug}`,
+    })
+  }
 
   return (
     <>

@@ -31,6 +31,7 @@ export default function NewPostPage() {
     metaTitle: '',
     metaDesc: '',
     focusKeyword: '',
+    jsonLd: '',
   })
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function NewPostPage() {
           image: form.image || null,
           postCategoryId: form.postCategoryId || null,
           tags: form.tags ? form.tags.split(',').map((t) => t.trim()) : [],
+          jsonLd: form.jsonLd || null,
         }),
       })
 
@@ -288,6 +290,8 @@ export default function NewPostPage() {
                 url: `https://hatefertebat.ir/blog/${form.slug}`,
                 author: form.author || 'هاتف ارتباط کرمان',
               }}
+              value={form.jsonLd}
+              onChange={(jsonLd) => setForm({ ...form, jsonLd })}
             />
           </div>
         </div>

@@ -38,6 +38,7 @@ interface ProductData {
   metaTitle: string | null
   metaDesc: string | null
   focusKeyword: string
+  jsonLd: string
 }
 
 export default function EditProductPage() {
@@ -68,6 +69,7 @@ export default function EditProductPage() {
     metaTitle: '',
     metaDesc: '',
     focusKeyword: '',
+    jsonLd: '',
   })
 
   const fetchProduct = useCallback(async () => {
@@ -97,6 +99,7 @@ export default function EditProductPage() {
           metaTitle: product.metaTitle || '',
           metaDesc: product.metaDesc || '',
           focusKeyword: product.focusKeyword || '',
+          jsonLd: product.jsonLd || '',
         })
       }
     } catch (error) {
@@ -152,6 +155,7 @@ export default function EditProductPage() {
           metaTitle: formData.metaTitle || null,
           metaDesc: formData.metaDesc || null,
           focusKeyword: formData.focusKeyword || null,
+          jsonLd: formData.jsonLd || null,
         }),
       })
 
@@ -550,6 +554,8 @@ export default function EditProductPage() {
                 image: formData.image || '',
                 url: `https://hatefertebat.ir/products/${formData.slug}`,
               }}
+              value={formData.jsonLd}
+              onChange={(jsonLd) => setFormData({ ...formData, jsonLd })}
             />
           </div>
         </div>
