@@ -7,7 +7,7 @@ import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
 
 interface Post {
   id: string
-  title: string
+  titleFa: string
   slug: string
   image: string | null
   status: string
@@ -137,9 +137,10 @@ export default function PostsPage() {
                           {post.image ? (
                             <Image
                               src={post.image}
-                              alt={post.title}
+                              alt={post.titleFa}
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -148,7 +149,7 @@ export default function PostsPage() {
                           )}
                         </div>
                         <div>
-                          <h3 className="font-medium text-dark line-clamp-1">{post.title}</h3>
+                          <h3 className="font-medium text-dark line-clamp-1">{post.titleFa}</h3>
                           <p className="text-xs text-gray-400">{post.slug}</p>
                         </div>
                       </div>

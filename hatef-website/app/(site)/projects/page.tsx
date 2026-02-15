@@ -7,18 +7,6 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-interface Project {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  image: string | null
-  category: string | null
-  client: string | null
-  location: string | null
-  completedAt: Date | null
-}
-
 export const metadata: Metadata = {
   title: 'پروژه‌های انجام شده',
   description: 'نمونه پروژه‌های اجرا شده توسط کرمان هاتف ارتباط در زمینه سیستم‌های امنیتی و مخابراتی',
@@ -30,7 +18,7 @@ async function getProjects(page: number = 1, limit: number = 9) {
   const [projects, total] = await Promise.all([
     prisma.project.findMany({
       where: { status: 'PUBLISHED' },
-      orderBy: { completedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
     }),
@@ -39,7 +27,7 @@ async function getProjects(page: number = 1, limit: number = 9) {
     })
   ])
 
-  return { projects: projects as Project[], total, totalPages: Math.ceil(total / limit) }
+  return { projects, total, totalPages: Math.ceil(total / limit) }
 }
 
 async function getStats() {
@@ -55,11 +43,6 @@ async function getStats() {
     projects: projectCount,
     clients: clientCount.length,
   }
-}
-
-function formatDate(date: Date | null): string {
-  if (!date) return ''
-  return new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit' }).format(date)
 }
 
 export default async function ProjectsPage() {
@@ -129,21 +112,17 @@ export default async function ProjectsPage() {
                 >
                   <div className="relative aspect-video">
                     <Image
-                      src={project.image || '/images/projects/default.jpg'}
-                      alt={project.title}
+                      src={project.images[0] || '/images/projects/default.jpg'}
+                      alt={project.titleFa}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      unoptimized
                     />
-                    {project.category && (
-                      <span className="absolute top-4 right-4 bg-primary text-white text-xs px-3 py-1 rounded-full">
-                        {project.category}
-                      </span>
-                    )}
                   </div>
 
                   <div className="p-6">
                     <h2 className="text-lg font-bold text-dark mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                      {project.title}
+                      {project.titleFa}
                     </h2>
 
                     <p className="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -163,10 +142,10 @@ export default async function ProjectsPage() {
                           {project.location}
                         </span>
                       )}
-                      {project.completedAt && (
+                      {project.year && (
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          {formatDate(project.completedAt)}
+                          {project.year}
                         </span>
                       )}
                     </div>

@@ -6,10 +6,10 @@ import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 
 interface Certificate {
   id: string
-  title: string
+  titleFa: string
   issuer: string | null
   image: string | null
-  year: string | null
+  issueDate: string | null
 }
 
 export default function CertificatesAdminPage() {
@@ -89,9 +89,10 @@ export default function CertificatesAdminPage() {
                 {cert.image ? (
                   <Image
                     src={cert.image}
-                    alt={cert.title}
+                    alt={cert.titleFa}
                     fill
                     className="object-contain p-4"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -102,9 +103,9 @@ export default function CertificatesAdminPage() {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-primary font-medium">{cert.issuer || '-'}</span>
-                  <span className="text-xs text-gray-400">{cert.year || '-'}</span>
+                  <span className="text-xs text-gray-400">{cert.issueDate ? new Date(cert.issueDate).getFullYear() : '-'}</span>
                 </div>
-                <h3 className="font-medium text-dark mb-3">{cert.title}</h3>
+                <h3 className="font-medium text-dark mb-3">{cert.titleFa}</h3>
                 <div className="flex items-center gap-2">
                   <button className="flex-1 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
                     <Edit className="w-4 h-4" />

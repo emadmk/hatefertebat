@@ -7,13 +7,13 @@ import { Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
 
 interface Project {
   id: string
-  title: string
+  titleFa: string
   slug: string
-  image: string | null
+  images: string[]
   client: string | null
   location: string | null
   status: string
-  completedAt: string | null
+  year: string | null
 }
 
 export default function ProjectsAdminPage() {
@@ -59,15 +59,6 @@ export default function ProjectsAdminPage() {
     }
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-'
-    try {
-      const date = new Date(dateString)
-      return new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit' }).format(date)
-    } catch {
-      return dateString
-    }
-  }
 
   if (loading) {
     return (
@@ -112,7 +103,7 @@ export default function ProjectsAdminPage() {
                   وضعیت
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  تاریخ اتمام
+                  سال
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   عملیات
@@ -125,12 +116,13 @@ export default function ProjectsAdminPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="relative w-16 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                        {project.image ? (
+                        {project.images[0] ? (
                           <Image
-                            src={project.image}
-                            alt={project.title}
+                            src={project.images[0]}
+                            alt={project.titleFa}
                             fill
                             className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -139,7 +131,7 @@ export default function ProjectsAdminPage() {
                         )}
                       </div>
                       <div>
-                        <h3 className="font-medium text-dark line-clamp-1">{project.title}</h3>
+                        <h3 className="font-medium text-dark line-clamp-1">{project.titleFa}</h3>
                         <p className="text-xs text-gray-400">{project.slug}</p>
                       </div>
                     </div>
@@ -162,7 +154,7 @@ export default function ProjectsAdminPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {formatDate(project.completedAt)}
+                    {project.year || '-'}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

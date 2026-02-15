@@ -5,9 +5,9 @@ import { Plus, Edit, Trash2, Download, FileText, Loader2 } from 'lucide-react'
 
 interface Catalog {
   id: string
-  title: string
+  titleFa: string
   file: string
-  category: string | null
+  category?: { nameFa: string } | null
   downloads: number
   createdAt: string
 }
@@ -121,12 +121,12 @@ export default function CatalogsPage() {
                         <FileText className="w-6 h-6 text-red-600" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-dark">{catalog.title}</h3>
+                        <h3 className="font-medium text-dark">{catalog.titleFa}</h3>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {catalog.category || '-'}
+                    {catalog.category?.nameFa || '-'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {catalog.downloads} بار
