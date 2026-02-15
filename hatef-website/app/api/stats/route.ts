@@ -32,7 +32,7 @@ export async function GET() {
       select: {
         id: true,
         name: true,
-        productTitle: true,
+        product: { select: { titleFa: true } },
         status: true,
         createdAt: true,
       },
