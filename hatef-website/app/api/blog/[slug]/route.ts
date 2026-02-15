@@ -29,7 +29,7 @@ export async function GET(
         status: 'PUBLISHED',
         id: { not: post.id },
       },
-      select: { id: true, title: true, slug: true, image: true, createdAt: true },
+      select: { id: true, titleFa: true, slug: true, image: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
       take: 3,
     })

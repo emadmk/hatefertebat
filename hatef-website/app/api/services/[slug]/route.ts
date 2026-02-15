@@ -29,7 +29,7 @@ export async function GET(
         status: 'PUBLISHED',
         id: { not: service.id },
       },
-      select: { id: true, title: true, slug: true, icon: true },
+      select: { id: true, titleFa: true, slug: true, icon: true },
       orderBy: { order: 'asc' },
       take: 5,
     })

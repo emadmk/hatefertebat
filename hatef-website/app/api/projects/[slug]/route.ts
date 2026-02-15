@@ -29,8 +29,8 @@ export async function GET(
         status: 'PUBLISHED',
         id: { not: project.id },
       },
-      select: { id: true, title: true, slug: true, image: true, client: true },
-      orderBy: { completedAt: 'desc' },
+      select: { id: true, titleFa: true, slug: true, images: true, client: true },
+      orderBy: { createdAt: 'desc' },
       take: 3,
     })
 
