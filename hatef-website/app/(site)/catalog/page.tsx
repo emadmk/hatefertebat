@@ -6,25 +6,19 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-interface Catalog {
-  id: string
-  title: string
-  description: string | null
-  category: string | null
-  fileUrl: string | null
-  fileSize: string | null
-}
-
 export const metadata: Metadata = {
   title: 'کاتالوگ محصولات',
   description: 'دانلود کاتالوگ محصولات کرمان هاتف ارتباط - تجهیزات مخابراتی، دوربین مداربسته، کنترل دسترسی',
 }
 
-async function getCatalogs(): Promise<Catalog[]> {
+async function getCatalogs() {
   const catalogs = await prisma.catalog.findMany({
+    include: {
+      category: { select: { nameFa: true } },
+    },
     orderBy: { order: 'asc' },
   })
-  return catalogs as Catalog[]
+  return catalogs
 }
 
 export default async function CatalogPage() {
@@ -36,7 +30,7 @@ export default async function CatalogPage() {
   ]
 
   // Get unique categories for filter buttons
-  const categories = ['همه', ...Array.from(new Set(catalogs.map(c => c.category).filter((c): c is string => c !== null)))]
+  const categories = ['همه', ...Array.from(new Set(catalogs.map(c => c.category?.nameFa).filter((c): c is string => c !== undefined)))]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,15 +83,14 @@ export default async function CatalogPage() {
                     <FileText className="w-8 h-8 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <span className="text-xs text-primary font-medium">{catalog.category || 'عمومی'}</span>
-                    <h3 className="font-bold text-dark mt-1 mb-2">{catalog.title}</h3>
+                    <span className="text-xs text-primary font-medium">{catalog.category?.nameFa || 'عمومی'}</span>
+                    <h3 className="font-bold text-dark mt-1 mb-2">{catalog.titleFa}</h3>
                     <p className="text-gray-600 text-sm mb-3">{catalog.description || ''}</p>
-                    <span className="text-xs text-gray-400">حجم فایل: {catalog.fileSize || '-'}</span>
                   </div>
                 </div>
 
                 <Link
-                  href={catalog.fileUrl || '#'}
+                  href={catalog.file || '#'}
                   className="flex items-center justify-center gap-2 w-full mt-4 bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-primary-dark transition-colors"
                 >
                   <FileDown className="w-5 h-5" />
